@@ -1,0 +1,15 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Application.Features.Category.Constants
+{
+    public static class CategoryMessages
+    {
+        public const string CategoryNameExists = "Category name exists";
+
+        public const string NoCategoryFound = "Category Not Found";
+    }
+}

@@ -1,0 +1,1007 @@
+@{
+    ViewData["Title"] = "Ayarlar";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .page-header {
+        padding: 32px 32px 0;
+    }
+
+    .page-title {
+        font-family: 'DM Serif Display', serif;
+        font-size: 32px;
+        margin-bottom: 6px;
+    }
+
+        .page-title span {
+            color: var(--accent);
+        }
+
+    .page-sub {
+        font-size: 13px;
+        color: var(--muted);
+        margin-bottom: 0;
+    }
+
+    .settings-container {
+        display: flex;
+        gap: 40px;
+        padding: 32px;
+        align-items: flex-start;
+    }
+
+    .settings-sidebar {
+        width: 240px;
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .settings-tab {
+        padding: 12px 16px;
+        border-radius: 8px;
+        color: var(--muted);
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+        .settings-tab:hover {
+            color: var(--text);
+            background: rgba(255,255,255,0.03);
+        }
+
+        .settings-tab.active {
+            color: var(--bg);
+            background: var(--accent);
+            font-weight: 600;
+        }
+
+    .settings-content {
+        flex: 1;
+        max-width: 800px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 32px;
+    }
+
+    .settings-section {
+        display: none;
+        flex-direction: column;
+        gap: 32px;
+    }
+
+        .settings-section.active {
+            display: flex;
+        }
+
+    .section-title {
+        font-family: 'DM Serif Display', serif;
+        font-size: 24px;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .setting-group {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .setting-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px;
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        transition: border-color 0.2s;
+    }
+    
+    .setting-item:hover {
+        border-color: rgba(255,255,255,0.1);
+    }
+
+    .setting-info {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .setting-name {
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .setting-desc {
+        font-size: 12px;
+        color: var(--muted);
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 9px 18px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        transition: all 0.2s;
+        box-sizing: border-box;
+        line-height: 1.2;
+    }
+
+    .btn-primary {
+        background: var(--accent);
+        color: var(--bg);
+    }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+
+    .btn-outline {
+        background: transparent;
+        color: var(--text);
+        border: 1px solid var(--border) !important;
+    }
+
+        .btn-outline:hover {
+            background: rgba(255,255,255,0.05);
+        }
+        
+    .btn-danger {
+        background: transparent;
+        color: var(--accent2);
+        border: 1px solid var(--accent2) !important;
+    }
+    
+    .btn-danger:hover {
+        background: rgba(192, 57, 43, 0.1);
+    }
+
+    /* Toggle Switch */
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 44px;
+        height: 24px;
+    }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: var(--border);
+        transition: .4s;
+        border-radius: 24px;
+    }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: var(--text);
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+    input:checked + .slider {
+        background-color: var(--accent);
+    }
+    
+    input:checked + .slider:before {
+        background-color: var(--bg);
+    }
+
+    input:checked + .slider:before {
+        transform: translateX(20px);
+    }
+    
+    /* Select Box */
+    .setting-select {
+        background: var(--bg);
+        color: var(--text);
+        border: 1px solid var(--border);
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 13px;
+        outline: none;
+        cursor: pointer;
+    }
+    
+    /* Modal Styles */
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(10, 10, 15, 0.85);
+        backdrop-filter: blur(4px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+    
+    .modal-overlay.show {
+        display: flex;
+        opacity: 1;
+    }
+
+    .modal-box {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        width: 100%;
+        max-width: 400px;
+        padding: 24px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        transform: translateY(20px);
+        transition: transform 0.2s;
+    }
+    
+    .modal-overlay.show .modal-box {
+        transform: translateY(0);
+    }
+
+    .modal-header {
+        font-family: 'DM Serif Display', serif;
+        font-size: 20px;
+        margin-bottom: 8px;
+        color: var(--text);
+    }
+
+    .modal-desc {
+        font-size: 13px;
+        color: var(--muted);
+        margin-bottom: 20px;
+    }
+
+    .modal-form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 16px;
+    }
+
+    .modal-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: rgba(240,237,232,0.7);
+    }
+
+    .modal-input {
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px 14px;
+        color: var(--text);
+        font-family: 'DM Sans', sans-serif;
+        font-size: 13px;
+        outline: none;
+        transition: border-color 0.2s;
+    }
+
+    .modal-input:focus {
+        border-color: var(--accent);
+    }
+    
+    .modal-input:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 12px;
+        margin-top: 24px;
+    }
+
+    .modal-footer .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 13px;
+    }
+
+    @@media (max-width: 768px) {
+        .page-header {
+            padding: 20px 16px 0;
+        }
+
+        .page-title {
+            font-size: 24px;
+        }
+
+        .settings-container {
+            flex-direction: column;
+            padding: 16px 12px;
+            gap: 16px;
+        }
+
+        .settings-sidebar {
+            width: 100%;
+            flex-direction: row;
+            overflow-x: auto;
+            gap: 6px;
+            padding-bottom: 6px;
+            scrollbar-width: none;
+        }
+
+        .settings-sidebar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .settings-tab {
+            padding: 8px 14px;
+            font-size: 13px;
+            white-space: nowrap;
+            flex-shrink: 0;
+            border-radius: 20px;
+            background: var(--surface2);
+        }
+
+        .settings-content {
+            padding: 20px 14px;
+            width: 100%;
+            border-radius: 12px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+        }
+
+        .setting-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 12px;
+        }
+
+        .setting-action {
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .setting-action .btn,
+        .setting-action .setting-select {
+            width: auto;
+        }
+
+        .modal-box {
+            max-width: calc(100vw - 32px);
+            padding: 20px 16px;
+            margin: 16px;
+        }
+
+        .modal-footer {
+            flex-direction: column-reverse;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .modal-footer .btn {
+            width: 100%;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+    }
+</style>
+
+<div class="topbar">
+    <div class="search-wrap">
+        <span class="search-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+        <input class="search-input" placeholder="Ayarlarda ara...">
+    </div>
+    <div class="topbar-actions">
+        <div class="icon-btn" id="notifBell">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            <div class="notif-dot" style="display:none;"></div>
+        </div>
+        <div class="icon-btn dark-mode-btn" id="darkModeBtn" onclick="toggleDarkMode()" title="Karanlık/Aydınlık mod">
+            <span class="dm-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg></span>
+        </div>
+    </div>
+</div>
+
+<div class="page-header">
+    <div class="page-title">Hesap <span>Ayarları</span></div>
+    <div class="page-sub">Tercihlerini yönet ve deneyimini kişiselleştir.</div>
+</div>
+
+<div class="settings-container">
+    <!-- Sidebar -->
+    <div class="settings-sidebar">
+        <div class="settings-tab active" onclick="switchSettings('account', this)">
+            <span>👤</span> Hesap & Güvenlik
+        </div>
+        <div class="settings-tab" onclick="switchSettings('playback', this)">
+            <span>🎬</span> Oynatma Ayarları
+        </div>
+        <div class="settings-tab" onclick="switchSettings('notifications', this)">
+            <span>🔔</span> Bildirimler
+        </div>
+        <div class="settings-tab" onclick="switchSettings('privacy', this)">
+            <span>🔒</span> Gizlilik
+        </div>
+        <div class="settings-tab" onclick="switchSettings('subscription', this)">
+            <span>💳</span> Abonelik
+        </div>
+    </div>
+
+    <!-- Content Area -->
+    <div class="settings-content">
+        
+        <!-- Hesap Section -->
+        @await Component.InvokeAsync("_AccountSettingsComponent")
+
+        <!-- Oynatma Section -->
+        <div class="settings-section" id="sec-playback">
+            <div class="section-title">Oynatma ve Görüntü</div>
+            
+            <div class="setting-group">
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-name">Varsayılan Video Kalitesi</div>
+                        <div class="setting-desc">İzleme sırasında varsayılan olarak seçilecek çözünürlük.</div>
+                    </div>
+                    <div class="setting-action">
+                        <select id="playback-quality" class="setting-select" onchange="savePlaybackSettings()">
+                            <option value="auto">Otomatik</option>
+                            <option value="4k">4K (Ultra HD)</option>
+                            <option value="1080p">1080p (Full HD)</option>
+                            <option value="720p">Veri Tasarrufu (720p)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-name">Sonraki Bölüme Otomatik Geç</div>
+                        <div class="setting-desc">Dizilerde mevcut bölüm bittiğinde sıradaki bölüm otomatik başlar.</div>
+                    </div>
+                    <div class="setting-action">
+                        <label class="switch">
+                            <input type="checkbox" id="playback-autoplay" onchange="savePlaybackSettings()">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-name">Varsayılan Ses / Altyazı Dili</div>
+                        <div class="setting-desc">Filmler başlarken varsayılan tercihiniz.</div>
+                    </div>
+                    <div class="setting-action">
+                        <select id="playback-audio" class="setting-select" style="margin-right:8px;" onchange="savePlaybackSettings()">
+                            <option value="en">Ses: İngilizce</option>
+                            <option value="tr">Ses: Türkçe</option>
+                        </select>
+                        <select id="playback-subtitle" class="setting-select" onchange="savePlaybackSettings()">
+                            <option value="tr">Altyazı: Türkçe</option>
+                            <option value="off">Altyazı: Kapalı</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bildirimler Section -->
+        <div class="settings-section" id="sec-notifications">
+            <div class="section-title">Bildirim Tercihleri</div>
+            
+            <div class="setting-group">
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-name">Yeni Çıkan İçerikler</div>
+                        <div class="setting-desc">Platforma eklenen yeni ve popüler filmlerden haberdar olun.</div>
+                    </div>
+                    <div class="setting-action">
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-name">Favorilerim İçin Güncellemeler</div>
+                        <div class="setting-desc">Favoriye eklediğiniz dizilerin yeni bölümü geldiğinde e-posta alın.</div>
+                    </div>
+                    <div class="setting-action">
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gizlilik Section -->
+        <div class="settings-section" id="sec-privacy">
+            <div class="section-title">Gizlilik ve Veri</div>
+            
+            <div class="setting-group">
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-name">İzleme Geçmişini Temizle</div>
+                        <div class="setting-desc">Bu zamana kadar izlediğiniz tüm içeriklerin kaydını siler.</div>
+                    </div>
+                    <div class="setting-action">
+                        <button class="btn btn-outline">Geçmişi Sil</button>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-name">Tüm Cihazlardan Çıkış Yap</div>
+                        <div class="setting-desc">Hesabınızın açık olduğu tüm tarayıcı ve cihazlardaki oturumları kapatır.</div>
+                    </div>
+                    <div class="setting-action">
+                        <button class="btn btn-danger">Çıkış Yap</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Abonelik Section -->
+        <div class="settings-section" id="sec-subscription">
+            <div class="section-title">Abonelik Durumu</div>
+            
+            <div class="setting-group">
+                <div class="setting-item" style="border-color: var(--accent);">
+                    <div class="setting-info">
+                        <div class="setting-name" style="color: var(--accent);">Premium Plan</div>
+                        <div class="setting-desc">4K Ultra HD kalitesinde sınırsız erişim.</div>
+                    </div>
+                    <div class="setting-action">
+                        <span style="font-size: 12px; font-weight: 600; margin-right: 16px; color: var(--muted);">Yenilenme: Yakında</span>
+                        <button class="btn btn-primary">Yükselt</button>
+                    </div>
+                </div>
+                
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-name">Ödeme Yöntemi</div>
+                        <div class="setting-desc">Kayıtlı Kart: **** **** **** 1234</div>
+                    </div>
+                    <div class="setting-action">
+                        <button class="btn btn-outline">Güncelle</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+    // ---- OYNATMA AYARLARI: localStorage ----
+    function savePlaybackSettings() {
+        const quality  = document.getElementById('playback-quality')?.value  ?? 'auto';
+        const autoplay = document.getElementById('playback-autoplay')?.checked ?? true;
+        const audio    = document.getElementById('playback-audio')?.value    ?? 'en';
+        const subtitle = document.getElementById('playback-subtitle')?.value  ?? 'tr';
+
+        localStorage.setItem('pref_quality',  quality);
+        localStorage.setItem('pref_autoplay', autoplay);
+        localStorage.setItem('pref_audio',    audio);
+        localStorage.setItem('pref_subtitle', subtitle);
+
+        showPlaybackSavedToast();
+    }
+
+    function loadPlaybackSettings() {
+        const quality  = localStorage.getItem('pref_quality')  ?? 'auto';
+        const autoplay = localStorage.getItem('pref_autoplay') ?? 'true';
+        const audio    = localStorage.getItem('pref_audio')    ?? 'en';
+        const subtitle = localStorage.getItem('pref_subtitle') ?? 'tr';
+
+        const qEl = document.getElementById('playback-quality');
+        const aEl = document.getElementById('playback-autoplay');
+        const auEl = document.getElementById('playback-audio');
+        const subEl = document.getElementById('playback-subtitle');
+
+        if (qEl)   qEl.value     = quality;
+        if (aEl)   aEl.checked   = (autoplay === 'true');
+        if (auEl)  auEl.value    = audio;
+        if (subEl) subEl.value   = subtitle;
+    }
+
+    function showPlaybackSavedToast() {
+        let toast = document.getElementById('playback-toast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'playback-toast';
+            toast.style.cssText = 'position:fixed;bottom:28px;right:28px;background:var(--accent);color:var(--bg);padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;z-index:9999;opacity:0;transition:opacity 0.3s;';
+            toast.innerText = '✓ Ayarlar kaydedildi';
+            document.body.appendChild(toast);
+        }
+        toast.style.opacity = '1';
+        clearTimeout(toast._t);
+        toast._t = setTimeout(() => toast.style.opacity = '0', 2000);
+    }
+
+    document.addEventListener('DOMContentLoaded', loadPlaybackSettings);
+
+    // Tab Değiştirme
+    function switchSettings(sectionId, element) {
+        document.querySelectorAll('.settings-tab').forEach(tab => tab.classList.remove('active'));
+        element.classList.add('active');
+
+        document.querySelectorAll('.settings-section').forEach(sec => sec.classList.remove('active'));
+        document.getElementById('sec-' + sectionId).classList.add('active');
+    }
+
+    // Modal Açma
+    function openModal(modalId) {
+        document.getElementById(modalId).classList.add('show');
+    }
+
+    // Modal Kapatma
+    function closeModal(modalId) {
+        document.getElementById(modalId).classList.remove('show');
+    }
+
+    // Modal dışına tıklayınca kapatma
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('show');
+            }
+        });
+    });
+
+    // AJAX ile e-posta doğrulama kodu gönderme
+    function sendVerificationEmail() {
+        const emailInput = document.getElementById("newEmailInput");
+        const email = emailInput ? emailInput.value : "";
+        
+        if (!email) {
+            alert("Lütfen yeni bir e-posta adresi girin.");
+            return;
+        }
+
+        const btn = document.querySelector("#emailModal .btn-primary");
+        const originalText = btn.innerHTML;
+        btn.innerHTML = "Gönderiliyor...";
+        btn.disabled = true;
+
+        const params = new URLSearchParams();
+        params.append("email", email);
+
+        fetch('/Settings/SendEmailCode', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: params
+        })
+        .then(response => {
+            if(response.ok) {
+                closeModal('emailModal');
+                
+                document.getElementById("verificationCodeInput").value = "";
+                window.remainingAttempts = 3;
+                
+                openModal('verifyModal');
+            } else {
+                alert("Mail gönderilirken bir hata oluştu.");
+            }
+        })
+        .catch(error => {
+            console.error("Hata:", error);
+            alert("Sunucuya ulaşılamadı.");
+        })
+        .finally(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+    }
+
+    // AJAX ile girilen kodu ve yeni e-postayı onaylama
+    function verifyEmailCode() {
+        const emailInput = document.getElementById("newEmailInput");
+        const codeInput = document.getElementById("verificationCodeInput");
+        
+        const email = emailInput ? emailInput.value : "";
+        const code = codeInput ? codeInput.value : "";
+
+        if (!code || code.length !== 6) {
+            alert("Lütfen 6 haneli doğrulama kodunu girin.");
+            return;
+        }
+
+        const btn = document.querySelector("#verifyModal .btn-primary");
+        const originalText = btn.innerHTML;
+        btn.innerHTML = "Onaylanıyor...";
+        btn.disabled = true;
+
+        const params = new URLSearchParams();
+        params.append("email", email);
+        params.append("code", code);
+
+        fetch('/Settings/UpdateEmailCode', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: params
+        })
+        .then(async response => {
+            if(response.ok) {
+                alert("E-posta adresiniz başarıyla güncellendi!");
+                closeModal('verifyModal');
+                window.location.reload(); // Başarılı olunca sayfayı yenileyelim ki yeni mail görünsün
+            } else {
+                window.remainingAttempts--;
+                
+                if (window.remainingAttempts > 0) {
+                    alert(`Hatalı kod! Kalan deneme hakkınız: ${window.remainingAttempts}`);
+                    codeInput.value = ""; // Yanlış girince kutucuğu temizle
+                    codeInput.focus();
+                } else {
+                    alert("3 kez hatalı kod girdiniz! İşlem iptal edildi. Lütfen baştan başlayın.");
+                    closeModal('verifyModal');
+                    codeInput.value = "";
+                }
+            }
+        })
+        .catch(error => {
+            console.error("Hata:", error);
+            alert("Sunucuya ulaşılamadı.");
+        })
+        .finally(() => {
+        });
+    }
+
+    // ŞİFRE SIFIRLAMA JS FONKSİYONLARI
+    function sendPasswordResetCode() {
+        const btn = document.querySelector("#passwordResetModal .btn-primary");
+        const originalText = btn.innerHTML;
+        btn.innerHTML = "Gönderiliyor...";
+        btn.disabled = true;
+
+        fetch('/Settings/SendEmailCode', {
+            method: 'POST'
+        })
+        .then(response => {
+            if(response.ok) {
+                closeModal('passwordResetModal');
+                
+                // Pencere açılırken inputları temizle ve deneme hakkını ayarla
+                document.getElementById("passwordResetCodeInput").value = "";
+                document.getElementById("newPasswordInput").value = "";
+                document.getElementById("confirmNewPasswordInput").value = "";
+                window.passwordResetAttempts = 3;
+                
+                openModal('passwordVerifyModal');
+            } else {
+                alert("Kod gönderilirken bir hata oluştu.");
+            }
+        })
+        .catch(error => {
+            console.error("Hata:", error);
+            alert("Sunucuya ulaşılamadı.");
+        })
+        .finally(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+    }
+
+    function verifyPasswordReset() {
+        const code = document.getElementById("passwordResetCodeInput").value;
+        const newPassword = document.getElementById("newPasswordInput").value;
+        const confirmPassword = document.getElementById("confirmNewPasswordInput").value;
+
+        if (!code || code.length !== 6) {
+            alert("Lütfen 6 haneli doğrulama kodunu girin.");
+            return;
+        }
+
+        if (!newPassword || newPassword.length < 6) {
+            alert("Yeni şifre en az 6 karakter olmalıdır.");
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            alert("Girdiğiniz yeni şifreler birbiriyle eşleşmiyor.");
+            return;
+        }
+
+        const btn = document.querySelector("#passwordVerifyModal .btn-primary");
+        const originalText = btn.innerHTML;
+        btn.innerHTML = "Güncelleniyor...";
+        btn.disabled = true;
+
+        const params = new URLSearchParams();
+        params.append("code", code);
+        params.append("password", newPassword);
+        params.append("confirmPassword", confirmPassword);
+
+        fetch('/Settings/ResetPassword', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: params
+        })
+        .then(async response => {
+            if(response.ok) {
+                alert("Şifreniz başarıyla güncellendi!");
+                closeModal('passwordVerifyModal');
+            } else {
+                const errorText = await response.text();
+                alert("Hata: " + errorText);
+            }
+        })
+        .catch(error => {
+            console.error("Hata:", error);
+            alert("Sunucuya ulaşılamadı.");
+        })
+        .finally(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+    }
+
+    // --- 2FA İŞLEMLERİ ---
+    function handle2FAToggle(checkbox) {
+        if (checkbox.checked) {
+            checkbox.checked = false;
+            
+            fetch('/Settings/TwoFactorAuthentication', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.isSuccess) {
+                    document.getElementById('twoFactorSecretKey').value = data.secretKey;
+                    document.getElementById('twoFactorCodeInput').value = '';
+
+                    // QR Kodu Çiz
+                    const qrcodeBox = document.getElementById("qrcodeBox");
+                    qrcodeBox.innerHTML = ""; // Öncekini temizle
+                    
+                    const otpAuthUri = `otpauth://totp/MovieApp:${data.email}?secret=${data.secretKey}&issuer=MovieApp`;
+                    
+                    new QRCode(qrcodeBox, {
+                        text: otpAuthUri,
+                        width: 160,
+                        height: 160,
+                        colorDark : "#000000",
+                        colorLight : "#ffffff",
+                        correctLevel : QRCode.CorrectLevel.M
+                    });
+
+                    openModal('twoFactorSetupModal');
+                } else {
+                    alert("2FA anahtarı alınırken hata oluştu.");
+                }
+            })
+            .catch(err => {
+                console.error("2FA Hatası:", err);
+                alert("Sunucuya ulaşılamadı.");
+            });
+        } else {
+            if(confirm("İki Adımlı Doğrulamayı kapatmak istediğinize emin misiniz? Hesabınızın güvenliği azalacaktır.")) {
+                fetch('/Settings/DisableTwoFactorAuthentication', {
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.isSuccess) {
+                        alert("İki adımlı doğrulama başarıyla kapatıldı.");
+                    } else {
+                        alert(data.message || "İki adımlı doğrulama kapatılamadı.");
+                        checkbox.checked = true;
+                    }
+                })
+                .catch(err => {
+                    console.error("2FA Kapatma Hatası:", err);
+                    alert("Sunucuya ulaşılamadı.");
+                    checkbox.checked = true;
+                });
+            } else {
+                checkbox.checked = true;
+            }
+        }
+    }
+
+    function cancel2FASetup() {
+        document.getElementById('twoFactorSwitch').checked = false;
+        closeModal('twoFactorSetupModal');
+    }
+
+    function verify2FASetup() {
+        const code = document.getElementById('twoFactorCodeInput').value;
+        const secretKey = document.getElementById('twoFactorSecretKey').value;
+
+        if (!code || code.length !== 6) {
+            alert("Lütfen 6 haneli kodu girin.");
+            return;
+        }
+
+        const btn = document.querySelector("#twoFactorSetupModal .btn-primary");
+        const originalText = btn.innerHTML;
+        btn.innerHTML = "Doğrulanıyor...";
+        btn.disabled = true;
+
+        const params = new URLSearchParams();
+        params.append("code", code);
+        params.append("secretKey", secretKey);
+
+        fetch('/Settings/TwoFactorAuthentication', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: params
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.isSuccess) {
+                alert(data.message);
+                document.getElementById('twoFactorSwitch').checked = true;
+                closeModal('twoFactorSetupModal');
+            } else {
+                alert(data.message || "Hatalı kod girdiniz.");
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Sunucuya ulaşılamadı.");
+        })
+        .finally(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+    }
+</script>

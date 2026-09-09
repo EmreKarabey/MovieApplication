@@ -1,0 +1,39 @@
+﻿@model List<AnnouncementListDto>
+<div class="section-header">
+    <div class="section-title">Editörün <span>Seçimi</span></div>
+</div>
+<div class="featured-row">
+    @{
+        var colors = new[] {
+        "linear-gradient(135deg, #1a2a4a, #2c3e50)",
+        "linear-gradient(135deg, #2d1515, #4a1515)",
+        "linear-gradient(135deg, #0d1a2e, #1a0a1e)",
+        "linear-gradient(135deg, #1a0f0a, #2d1f0a)"
+        }; int i = 0;
+    }
+
+    @if (Model != null && Model.Any())
+    {
+        @foreach (var item in Model)
+        {
+            <div class="featured-card">
+                <div class="fc-bg" style="background: @colors[i % colors.Length];"></div>
+                <div class="fc-gradient"></div>
+                <div class="fc-content">
+                    <div class="fc-label">@item.Title</div>
+                    <div class="fc-title">@item.Description</div>
+                    <div class="fc-meta">
+                        <span>@item.Subtitle1</span>
+                        <span>·</span>
+                        <span>@item.Subtitle2</span>
+                    </div>
+                </div>
+            </div>
+            i++;
+        }
+    }
+    else
+    {
+        <p>Gösterilecek duyuru bulunamadı.</p>
+    }
+</div>

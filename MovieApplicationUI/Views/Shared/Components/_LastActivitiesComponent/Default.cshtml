@@ -1,0 +1,45 @@
+@model MovieApplicationUI.Paginate.PaginateList<MovieApplicationUI.Dto.Activities.MyActivityDto>
+<div class="profile-section">
+	<div class="section-title">
+		<span>⚡</span> Son Aktiviteler
+	</div>
+	<div class="recent-activity-list" id="activitiesContainer">
+		@if (Model != null && Model.Items != null && Model.Items.Any())
+		{
+			@await Html.PartialAsync("~/Views/Shared/_ActivityItemsPartial.cshtml", Model.Items)
+		}
+		else
+		{
+			<div class="text-center" style="color: var(--muted); font-size: 14px; padding: 20px 0;">
+				Henüz bir aktiviteniz bulunmuyor.
+			</div>
+		}
+	</div>
+	
+	@if (Model != null && Model.Items != null && Model.Items.Any())
+	{
+		<div class="text-center mt-3" style="text-align: center;">
+			<button id="loadMoreActivitiesBtn" style="background-color: #333; color: white; border-radius: 20px; padding: 5px 15px; border:none; cursor:pointer;">Daha Fazla Göster</button>
+		</div>
+	}
+</div>
+
+<script>
+	const loadMoreBtn = document.getElementById('loadMoreActivitiesBtn');
+	if (loadMoreBtn) {
+		let currentActivityPage = 0;
+		loadMoreBtn.addEventListener('click', function() {
+			currentActivityPage++;
+			fetch(`/Profile/LoadMoreActivities?pageIndex=${currentActivityPage}`)
+				.then(response => response.text())
+				.then(html => {
+					if (html.trim() !== '') {
+						document.getElementById('activitiesContainer').insertAdjacentHTML('beforeend', html);
+					} else {
+						loadMoreBtn.style.display = 'none';
+					}
+				})
+				.catch(err => console.error(err));
+		});
+	}
+</script>

@@ -1,0 +1,59 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Remove="Features\MoviesCategory\Commands\Update\**" />
+    <None Remove="Features\MoviesCategory\Commands\Update\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Features\Activities\Profiles\" />
+    <Folder Include="Features\DarkMode\Constants\" />
+    <Folder Include="Features\DarkMode\Rules\" />
+    <Folder Include="Features\DarkMode\Profiles\" />
+    <Folder Include="Features\NotificationSettings\Queries\GetBySettings\" />
+    <Folder Include="Features\Notification\Command\Update\" />
+    <Folder Include="Features\Notification\Constants\" />
+    <Folder Include="Features\Notification\Rules\" />
+    <Folder Include="Features\Notification\Profiles\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="16.1.1" />
+    <PackageReference Include="FirebaseAdmin" Version="3.6.0" />
+    <PackageReference Include="FluentValidation" Version="12.1.1" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
+    <PackageReference Include="Google.Apis.Auth" Version="1.75.0" />
+    <PackageReference Include="MediatR" Version="14.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.9" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="9.0.14" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.14" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.14" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.14" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Domain\Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="CoreApplication">
+      <HintPath>..\..\CorePackages\CoreApplication\bin\Debug\net9.0\CoreApplication.dll</HintPath>
+    </Reference>
+    <Reference Include="CoreCrossingCuttingConcerns">
+      <HintPath>..\..\CorePackages\CoreCrossingCuttingConcerns\bin\Debug\net9.0\CoreCrossingCuttingConcerns.dll</HintPath>
+    </Reference>
+    <Reference Include="CorePersistence">
+      <HintPath>..\..\CorePackages\CorePersistence\bin\Debug\net9.0\CorePersistence.dll</HintPath>
+    </Reference>
+    <Reference Include="CoreSecurity">
+      <HintPath>..\..\CorePackages\CoreSecurity\bin\Debug\net9.0\CoreSecurity.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,43 @@
+@model IEnumerable<MovieApplicationUI.Dto.Activities.MyActivityDto>
+
+@foreach (var item in Model)
+{
+	<div class="activity-item">
+		<div class="activity-icon">
+			<img src="@item.ImageURL" alt="@item.MovieName" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover;" />
+		</div>
+		<div class="activity-details">
+			
+			@if (item.ActivitiesCategory == 1)
+			{
+				<div class="activity-title">@item.MovieName İzlediniz</div>
+			}
+			else if (item.ActivitiesCategory == 2)
+			{
+				<div class="activity-title">@item.MovieName filmini kaydettiniz.</div>
+			}
+			else if (item.ActivitiesCategory == 3)
+			{
+				<div class="activity-title">@item.MovieName favorilere eklediniz</div>
+			}
+			@{
+				var timeSpan = DateTime.UtcNow - item.CreatedAt;
+				string timeAgo = string.Empty;
+
+				if (timeSpan.TotalDays >= 365)
+					timeAgo = $"{(int)(timeSpan.TotalDays / 365)} yıl önce";
+				else if (timeSpan.TotalDays >= 30)
+					timeAgo = $"{(int)(timeSpan.TotalDays / 30)} ay önce";
+				else if (timeSpan.TotalDays >= 1)
+					timeAgo = $"{(int)timeSpan.TotalDays} gün önce";
+				else if (timeSpan.TotalHours >= 1)
+					timeAgo = $"{(int)timeSpan.TotalHours} saat önce";
+				else if (timeSpan.TotalMinutes >= 1)
+					timeAgo = $"{(int)timeSpan.TotalMinutes} dakika önce";
+				else
+					timeAgo = "Az önce";
+			}
+			<div class="activity-time">@timeAgo</div>
+		</div>
+	</div>
+}

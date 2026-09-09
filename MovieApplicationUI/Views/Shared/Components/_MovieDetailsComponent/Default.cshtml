@@ -1,0 +1,23 @@
+@model MovieCategoryDetail
+
+<div class="movie-modal-poster-side">
+	<img id="modalMoviePoster" src="@Model.ImageURL" alt="Film Afişi" />
+</div>
+<div class="movie-modal-info-side">
+	<h2 id="modalMovieName" class="movie-modal-title">@Model.MovieName</h2>
+
+	<div class="movie-modal-meta">
+		<span class="modal-meta-pill">@Model.ReleaseDate</span>
+		<span class="modal-meta-pill">@Model.ProducerName</span>
+		@foreach (var item in Model.CategoryName)
+		{
+			<span class="modal-meta-pill">@item</span>
+		}
+		
+	</div>
+
+	<div class="movie-modal-section">
+		<h3>Açıklama</h3>
+		<p id="modalMovieDesc">@Model.Description</p>
+	</div>
+</div>

@@ -1,0 +1,1006 @@
+@model PaginateList<HistoryListDto>
+
+@{
+	ViewData["Title"] = "Geçmiş";
+	Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+	.history-container {
+		display: flex;
+		gap: 32px;
+		align-items: flex-start;
+		padding-top: 10px;
+	}
+
+	.history-main {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.history-sidebar {
+		width: 320px;
+		background: var(--surface2);
+		border-radius: 12px;
+		padding: 24px;
+		border: 1px solid var(--border);
+		position: sticky;
+		top: 90px;
+	}
+
+	.history-search {
+		margin-bottom: 24px;
+		position: relative;
+		transition: all 0.3s ease;
+	}
+
+		.history-search input {
+			width: 100%;
+			background: rgba(0,0,0,0.2);
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			padding: 12px 16px 12px 44px;
+			color: var(--text);
+			font-family: 'DM Sans', sans-serif;
+			font-size: 13px;
+			outline: none;
+			transition: border-color 0.3s, background 0.3s, box-shadow 0.3s;
+		}
+
+			.history-search input:focus {
+				border-color: var(--search-focus-color, rgba(232,184,75,0.4));
+				box-shadow: 0 0 0 3px var(--search-glow-color, rgba(232,184,75,0.06));
+			}
+
+		.history-search .search-icon-wrap {
+			position: absolute;
+			left: 0;
+			top: 0;
+			bottom: 0;
+			width: 44px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			pointer-events: none;
+			transition: all 0.3s ease;
+		}
+
+		.history-search .search-icon-wrap .search-icon-badge {
+			width: 26px;
+			height: 26px;
+			border-radius: 6px;
+			background: var(--search-badge-bg, rgba(255,255,255,0.06));
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 13px;
+			color: var(--muted);
+			transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+		}
+
+
+
+	.history-menu-title {
+		font-size: 10px;
+		text-transform: uppercase;
+		letter-spacing: 2px;
+		color: var(--muted);
+		margin-bottom: 12px;
+		font-weight: 600;
+	}
+
+	.history-menu-list {
+		list-style: none;
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+	}
+
+	.history-menu-item {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		padding: 12px 16px;
+		border-radius: 8px;
+		color: var(--muted);
+		cursor: pointer;
+		transition: all 0.2s;
+		font-size: 14px;
+		font-weight: 500;
+		position: relative;
+	}
+
+		.history-menu-item:hover {
+			background: rgba(255,255,255,0.03);
+			color: var(--text);
+		}
+
+		.history-menu-item.active {
+			background: rgba(232,184,75,0.08);
+			color: var(--accent);
+		}
+
+			.history-menu-item.active::before {
+				content: '';
+				position: absolute;
+				left: 0;
+				top: 0;
+				bottom: 0;
+				width: 3px;
+				background: var(--accent);
+				border-radius: 4px;
+			}
+
+	/* List View Cards */
+	.history-list {
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
+	}
+
+	.history-card {
+		display: flex;
+		gap: 20px;
+		padding: 16px;
+		border-radius: 12px;
+		background: var(--surface);
+		transition: all 0.2s;
+		border: 1px solid var(--border);
+		position: relative;
+		cursor: pointer;
+	}
+
+		.history-card:hover {
+			background: var(--surface2);
+			transform: translateX(4px);
+			border-color: rgba(255,255,255,0.1);
+		}
+
+	.history-card-img-wrap {
+		width: 180px;
+		height: 100px;
+		border-radius: 8px;
+		overflow: hidden;
+		flex-shrink: 0;
+		position: relative;
+		background: #000;
+	}
+
+	.history-card-img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		opacity: 0.85;
+		transition: opacity 0.3s;
+	}
+
+	.history-card:hover .history-card-img {
+		opacity: 1;
+	}
+
+	.history-card-play-overlay {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background: rgba(0, 0, 0, 0.5);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		opacity: 0;
+		transition: all 0.3s ease;
+		z-index: 1;
+	}
+
+	.history-card:hover .history-card-play-overlay {
+		opacity: 1;
+	}
+
+	.history-card-play-icon {
+		width: 40px;
+		height: 40px;
+		background: #e8b84b;
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: #000;
+		font-size: 16px;
+		transform: scale(0.8);
+		transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+		padding-left: 3px;
+	}
+
+	.history-card:hover .history-card-play-icon {
+		transform: scale(1);
+	}
+
+	.history-card-progress {
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		height: 4px;
+		background: var(--accent2);
+		z-index: 2;
+	}
+
+	.history-card-content {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		min-width: 0;
+	}
+
+	.history-card-title {
+		font-size: 16px;
+		font-weight: 600;
+		color: var(--text);
+		margin-bottom: 6px;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.history-card-meta {
+		font-size: 12px;
+		color: var(--muted);
+		margin-bottom: 8px;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+
+	.history-card-desc {
+		font-size: 13px;
+		color: var(--muted);
+		line-height: 1.5;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+
+	.history-card-actions {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		opacity: 0;
+		transition: opacity 0.2s;
+		padding-left: 10px;
+	}
+
+	.history-card:hover .history-card-actions {
+		opacity: 1;
+	}
+
+	.remove-btn {
+		width: 36px;
+		height: 36px;
+		border-radius: 50%;
+		background: rgba(255,255,255,0.05);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: var(--muted);
+		border: none;
+		cursor: pointer;
+		transition: all 0.2s;
+		font-size: 16px;
+	}
+
+		.remove-btn:hover {
+			background: rgba(192,57,43,0.2);
+			color: #e87b6b;
+		}
+
+	.tab-content {
+		display: none;
+		animation: fadeUp 0.3s ease both;
+	}
+
+		.tab-content.active {
+			display: block;
+		}
+
+	@@media (max-width: 900px) {
+		.content {
+			padding: 16px 12px;
+		}
+
+		.history-container {
+			flex-direction: column-reverse;
+			gap: 16px;
+			width: 100%;
+			margin: 0;
+			padding: 0;
+		}
+
+		.history-main {
+			width: 100%;
+			margin: 0;
+			padding: 0;
+		}
+
+		.history-list {
+			width: 100%;
+			gap: 10px;
+		}
+
+		.history-sidebar {
+			width: 100%;
+			position: static;
+			padding: 12px 14px;
+			border-radius: 14px;
+			margin: 0;
+			background: var(--surface2);
+		}
+
+		.history-search {
+			display: flex;
+			margin-bottom: 12px;
+			width: 100%;
+		}
+
+		.history-sidebar .history-menu-title {
+			display: none;
+		}
+
+		.history-menu-list {
+			display: flex;
+			flex-direction: row;
+			overflow-x: auto;
+			-webkit-overflow-scrolling: touch;
+			gap: 8px;
+			padding: 2px 0;
+			scrollbar-width: none;
+		}
+
+		.history-menu-list::-webkit-scrollbar {
+			display: none;
+		}
+
+		.history-menu-item {
+			white-space: nowrap;
+			flex-shrink: 0;
+			padding: 7px 14px;
+			font-size: 12.5px;
+			border-radius: 20px;
+			background: var(--surface);
+			border: 1px solid var(--border);
+			gap: 6px;
+		}
+
+		.history-menu-item.active::before {
+			display: none;
+		}
+
+		.history-menu-item.active {
+			background: var(--accent);
+			color: var(--bg);
+			border-color: var(--accent);
+			font-weight: 600;
+		}
+
+		.history-card {
+			width: 100%;
+			box-sizing: border-box;
+			flex-direction: row;
+			gap: 12px;
+			padding: 10px 12px;
+			align-items: center;
+			justify-content: flex-start;
+			border-radius: 10px;
+		}
+
+		.history-card-img-wrap {
+			width: 110px;
+			height: 64px;
+			border-radius: 6px;
+			flex-shrink: 0;
+		}
+
+		.history-card-content {
+			flex: 1;
+			min-width: 0;
+		}
+
+		.history-card-title {
+			font-size: 13.5px;
+			margin-bottom: 3px;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+
+		.history-card-desc {
+			display: none;
+		}
+
+		.history-card-meta {
+			font-size: 11px;
+			gap: 4px;
+		}
+
+		.history-card-actions {
+			opacity: 1;
+			margin-left: auto;
+			padding-left: 6px;
+			flex-shrink: 0;
+		}
+
+		.remove-btn {
+			width: 32px;
+			height: 32px;
+			font-size: 14px;
+		}
+	}
+</style>
+
+<div class="topbar">
+	<div style="font-size: 16px; font-weight: 700; color: var(--text);">Geçmiş & Listeler</div>
+	<div class="topbar-actions" style="margin-left: auto;">
+		<div class="icon-btn" id="notifBell">
+			<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+			<div class="notif-dot" style="display:none;"></div>
+		</div>
+		<div class="icon-btn dark-mode-btn" id="darkModeBtn" onclick="toggleDarkMode()" title="Karanlık/Aydınlık mod">
+			<span class="dm-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg></span>
+		</div>
+	</div>
+</div>
+
+<div class="content">
+	<div class="section-header">
+		<h2 class="section-title" id="pageTitle">İzleme <span>Geçmişi</span></h2>
+	</div>
+
+	<div class="history-container">
+		<!-- Sol Alan: Listeler -->
+		<div class="history-main">
+
+			<!-- 1. İzleme Geçmişi -->
+			<div id="tab-history" class="tab-content active">
+				<div class="history-list">
+					@await Html.PartialAsync("_HistoryItems", Model)
+				</div>
+			</div>
+
+			<!-- 2. Beğendiklerim -->
+			<div id="tab-liked" class="tab-content">
+				<div class="history-list" id="liked-list-container">
+				</div>
+			</div>
+
+			<!-- 3. Beğenmediklerim -->
+			<div id="tab-disliked" class="tab-content">
+				<div class="history-list" id="unliked-list-container">
+					<!-- İçerik JavaScript ile yüklenecek -->
+				</div>
+			</div>
+
+		</div>
+
+		<!-- Sağ Alan: Menü -->
+		<div class="history-sidebar">
+			<div class="history-search" id="searchBar">
+				<div class="search-icon-wrap">
+					<div class="search-icon-badge" id="searchIconBadge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+				</div>
+				<input type="text" id="historySearchInput" placeholder="Geçmişte ara..." autocomplete="off" />
+			</div>
+
+			<h3 class="history-menu-title">Geçmiş Türü</h3>
+			<ul class="history-menu-list">
+				<li class="history-menu-item active" onclick="switchTab('history', this, 'İzleme <span>Geçmişi</span>')">
+					<span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+					İzleme Geçmişi
+				</li>
+				<li class="history-menu-item" onclick="switchTab('liked', this, 'Beğenilen <span>Filmler</span>')">
+					<span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg></span>
+					Beğendiklerim
+				</li>
+				<li class="history-menu-item" onclick="switchTab('disliked', this, 'Beğenilmeyen <span>Filmler</span>')">
+					<span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10zM17 2h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg></span>
+					Beğenmediklerim
+				</li>
+			</ul>
+		</div>
+	</div>
+</div>
+
+<script>
+	// ── ARAMA DEĞİŞKENLERİ (global) ──
+	let hSearchMode = false, hSearchQuery = '', hSearchPage = 0, hSearchHasMore = true;
+	let lSearchMode = false, lSearchQuery = '', lSearchPage = 0, lSearchHasMore = true;
+	let dSearchMode = false, dSearchQuery = '', dSearchPage = 0, dSearchHasMore = true;
+	let searchDebounceTimer = null;
+
+	document.addEventListener('DOMContentLoaded', function() {
+		document.querySelectorAll('.sidebar .nav-item').forEach(el => {
+			if(el.textContent.includes('Geçmiş')) {
+				document.querySelectorAll('.sidebar .nav-item').forEach(e => e.classList.remove('active'));
+				el.classList.add('active');
+			}
+		});
+	});
+
+	const searchThemes = {
+		history: {
+			placeholder: 'Geçmişte ara...',
+			badgeText: 'Geçmiş',
+			badgeBg: 'rgba(255,255,255,0.07)',
+			badgeColor: 'var(--muted)',
+			focusColor: 'rgba(232,184,75,0.35)',
+			glowColor: 'rgba(232,184,75,0.06)',
+			iconBadgeBg: 'rgba(255,255,255,0.06)',
+			icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'
+		},
+		liked: {
+			placeholder: 'Beğenilenlerde ara...',
+			badgeText: 'Beğenilenler',
+			badgeBg: 'rgba(232,184,75,0.13)',
+			badgeColor: '#e8b84b',
+			focusColor: 'rgba(232,184,75,0.4)',
+			glowColor: 'rgba(232,184,75,0.08)',
+			iconBadgeBg: 'rgba(232,184,75,0.12)',
+			icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e8b84b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>'
+		},
+		disliked: {
+			placeholder: 'Beğenilmeyenlerde ara...',
+			badgeText: 'Beğenilmeyenler',
+			badgeBg: 'rgba(232,100,80,0.13)',
+			badgeColor: '#e87b6b',
+			focusColor: 'rgba(232,100,80,0.4)',
+			glowColor: 'rgba(232,100,80,0.08)',
+			iconBadgeBg: 'rgba(232,100,80,0.12)',
+			icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e87b6b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10zM17 2h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg>'
+		}
+	};
+
+	function applySearchTheme(tabId) {
+		const theme = searchThemes[tabId] || searchThemes['history'];
+		const searchBar = document.getElementById('searchBar');
+		const input = document.getElementById('historySearchInput');
+		const iconBadge = document.getElementById('searchIconBadge');
+
+		// Placeholder güncelle
+		input.placeholder = theme.placeholder;
+
+		// CSS değişkenlerini güncelle
+		searchBar.style.setProperty('--search-focus-color', theme.focusColor);
+		searchBar.style.setProperty('--search-glow-color', theme.glowColor);
+		searchBar.style.setProperty('--search-badge-bg', theme.iconBadgeBg);
+
+		// İkon güncelle
+		iconBadge.style.background = theme.iconBadgeBg;
+		iconBadge.innerHTML = theme.icon;
+
+		// Input'u temizle
+		input.value = '';
+		clearHistorySearch();
+	}
+
+	function switchTab(tabId, element, titleHtml) {
+		// Remove active class from all menu items
+		document.querySelectorAll('.history-menu-item').forEach(item => {
+			item.classList.remove('active');
+		});
+
+		// Add active class to clicked item
+		element.classList.add('active');
+
+		// Hide all tabs
+		document.querySelectorAll('.tab-content').forEach(tab => {
+			tab.classList.remove('active');
+		});
+
+		// Show selected tab
+		document.getElementById('tab-' + tabId).classList.add('active');
+
+		// Update title
+		document.getElementById('pageTitle').innerHTML = titleHtml;
+
+		// Search bar temasını güncelle
+		applySearchTheme(tabId);
+
+		if (tabId === 'liked' && !isLikedMoviesLoaded) {
+			loadMoreLikedMovies();
+			isLikedMoviesLoaded = true;
+		}
+
+		if (tabId === 'disliked' && !isUnlikedMoviesLoaded) {
+			loadMoreUnlikedMovies();
+			isUnlikedMoviesLoaded = true;
+		}
+
+		// Arama input'unu sıfırla ve placeholder güncelle
+		const sInput = document.getElementById('historySearchInput');
+		if (sInput) {
+			sInput.value = '';
+			if (tabId === 'liked') sInput.placeholder = 'Beğenilenlerde ara...';
+			else if (tabId === 'disliked') sInput.placeholder = 'Beğenilmeyenlerde ara...';
+			else sInput.placeholder = 'Geçmişte ara...';
+		}
+		hSearchMode = false;
+		lSearchMode = false;
+		dSearchMode = false;
+	}
+
+	function removeFromHistory(id, cardElement) {
+		fetch(`/History/RemoveHistory?historyId=${id}`, { method: 'POST' })
+			.then(response => {
+				if(response.ok) {
+					cardElement.style.display = 'none';
+					showToast('Geçmişten silindi', 'info');
+				} else {
+					showToast('Silinirken bir hata oluştu', 'error');
+				}
+			})
+			.catch(err => {
+				console.error(err);
+				showToast('Bağlantı hatası', 'error');
+			});
+	}
+
+	let pageIndex = 0;
+	let isLoading = false;
+	let hasMore = true;
+
+	function loadMoreHistory() {
+		isLoading = true;
+		pageIndex++;
+		
+		fetch(`/History/LoadMoreHistory?pageIndex=${pageIndex}`)
+			.then(response => response.text())
+			.then(html => {
+				if (html.trim().length === 0) {
+					hasMore = false; // Başka veri kalmadı
+				} else {
+					const historyList = document.querySelector('#tab-history .history-list');
+					historyList.insertAdjacentHTML('beforeend', html);
+				}
+				isLoading = false;
+			})
+			.catch(err => {
+				console.error(err);
+				isLoading = false;
+			});
+	}
+
+	// Beğenilenler için Değişkenler
+	let likedPageIndex = 0;
+	let isLikedLoading = false;
+	let hasMoreLiked = true;
+	let isLikedMoviesLoaded = false;
+
+	// Beğenilmeyenler için Değişkenler
+	let unlikedPageIndex = 0;
+	let isUnlikedLoading = false;
+	let hasMoreUnliked = true;
+	let isUnlikedMoviesLoaded = false;
+
+	let scrollTimeout;
+	window.addEventListener('scroll', () => {
+		if (scrollTimeout) return;
+		scrollTimeout = setTimeout(() => {
+			// History scroll
+			const historyTab = document.getElementById('tab-history');
+			if (historyTab && historyTab.classList.contains('active')) {
+				if (!isLoading && hasMore) {
+					if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 200) {
+						loadMoreHistory();
+					}
+				}
+			}
+
+			// Liked scroll
+			const likedTab = document.getElementById('tab-liked');
+			if (likedTab && likedTab.classList.contains('active')) {
+				if (!isLikedLoading && hasMoreLiked) {
+					if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 200) {
+						loadMoreLikedMovies();
+					}
+				}
+			}
+
+			// Disliked scroll
+			const dislikedTab = document.getElementById('tab-disliked');
+			if (dislikedTab && dislikedTab.classList.contains('active')) {
+				if (!isUnlikedLoading && hasMoreUnliked) {
+					if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 200) {
+						loadMoreUnlikedMovies();
+					}
+				}
+			}
+			scrollTimeout = null;
+		}, 100);
+	});
+
+	function loadMoreLikedMovies() {
+		isLikedLoading = true;
+		
+		fetch(`/LikedMovie/LoadMoreLikedMovies?pageIndex=${likedPageIndex}`)
+			.then(response => response.text())
+			.then(html => {
+				if (html.trim().length === 0) {
+					hasMoreLiked = false;
+				} else {
+					const likedList = document.getElementById('liked-list-container');
+					likedList.insertAdjacentHTML('beforeend', html);
+					likedPageIndex++;
+				}
+				isLikedLoading = false;
+			})
+			.catch(err => {
+				console.error(err);
+				isLikedLoading = false;
+			});
+	}
+
+	function removeLikedMovie(id, cardElement) {
+		fetch(`/LikedMovie/RemoveLikedMovie?likedMovieId=${id}`, { method: 'POST' })
+			.then(response => {
+				if(response.ok) {
+					cardElement.style.display = 'none';
+					showToast('Beğenilenlerden çıkarıldı', 'info');
+				} else {
+					showToast('Silinirken bir hata oluştu', 'error');
+				}
+			})
+			.catch(err => {
+				console.error(err);
+				showToast('Bağlantı hatası', 'error');
+			});
+	}
+
+	function loadMoreUnlikedMovies() {
+		isUnlikedLoading = true;
+		
+		fetch(`/UnlikedMovie/LoadMoreUnlikedMovies?pageIndex=${unlikedPageIndex}`)
+			.then(response => response.text())
+			.then(html => {
+				if (html.trim().length === 0) {
+					hasMoreUnliked = false;
+				} else {
+					const unlikedList = document.getElementById('unliked-list-container');
+					unlikedList.insertAdjacentHTML('beforeend', html);
+					unlikedPageIndex++;
+				}
+				isUnlikedLoading = false;
+			})
+			.catch(err => {
+				console.error(err);
+				isUnlikedLoading = false;
+			});
+	}
+
+	function removeUnlikedMovie(id, cardElement) {
+		fetch(`/UnlikedMovie/RemoveUnlikedMovie?unlikedMovieId=${id}`, { method: 'POST' })
+			.then(response => {
+				if(response.ok) {
+					cardElement.style.display = 'none';
+					showToast('Listeden çıkarıldı', 'info');
+				} else {
+					showToast('Silinirken bir hata oluştu', 'error');
+				}
+			})
+			.catch(err => {
+				console.error(err);
+				showToast('Bağlantı hatası', 'error');
+			});
+	}
+
+	// ── ORTAK ARAMA ──
+	const historySearchInput = document.getElementById('historySearchInput');
+	const historyListEl = document.querySelector('#tab-history .history-list');
+	const likedListEl = document.getElementById('liked-list-container');
+	const dislikedListEl = document.getElementById('unliked-list-container');
+
+	function getActiveTab() {
+		if (document.getElementById('tab-liked')?.classList.contains('active')) return 'liked';
+		if (document.getElementById('tab-disliked')?.classList.contains('active')) return 'disliked';
+		return 'history';
+	}
+
+	historySearchInput.addEventListener('input', function () {
+		const query = this.value.trim();
+		clearTimeout(searchDebounceTimer);
+
+		const tab = getActiveTab();
+		if (!query) {
+			if (tab === 'liked') clearLikedSearch();
+			else if (tab === 'disliked') clearDislikedSearch();
+			else clearHistorySearch();
+			return;
+		}
+
+		searchDebounceTimer = setTimeout(() => {
+			if (tab === 'liked') startLikedSearch(query);
+			else if (tab === 'disliked') startDislikedSearch(query);
+			else startHistorySearch(query);
+		}, 400);
+	});
+
+
+	// ── GEÇMİŞ ARAMA ──
+	async function startHistorySearch(query) {
+		hSearchQuery = query;
+		hSearchPage = 0;
+		hSearchHasMore = true;
+		hSearchMode = true;
+
+		historyListEl.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-size:13px;">⏳ Aranıyor...</div>';
+		await loadHistorySearch(true);
+	}
+
+	async function loadHistorySearch(replace = false) {
+		if (!hSearchHasMore) return;
+
+		try {
+			const url = `/History/Search?s=${encodeURIComponent(hSearchQuery)}&pageIndex=${hSearchPage}`;
+			const response = await fetch(url);
+			if (!response.ok) throw new Error('Arama başarısız');
+			const html = await response.text();
+
+			if (replace) {
+				if (html.trim().length === 0) {
+					historyListEl.innerHTML = `
+						<div style="text-align:center;padding:60px 20px;color:var(--muted);">
+							<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.4;margin-bottom:12px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+							<div style="font-size:16px;font-weight:600;color:var(--text);">Sonuç bulunamadı</div>
+							<div style="font-size:13px;margin-top:6px;">"${hSearchQuery}" için geçmişinizde film yok.</div>
+						</div>`;
+					hSearchHasMore = false; return;
+				}
+				historyListEl.innerHTML = html;
+			} else {
+				if (html.trim().length === 0) { hSearchHasMore = false; return; }
+				historyListEl.insertAdjacentHTML('beforeend', html);
+			}
+
+			const cardCount = (html.match(/history-card/g) || []).length;
+			if (cardCount < 10) hSearchHasMore = false;
+			hSearchPage++;
+
+		} catch (err) {
+			console.error('Arama hatası:', err);
+			showToast('Arama sırasında hata oluştu.', 'info');
+		}
+	}
+
+	function clearHistorySearch() {
+		hSearchMode = false; hSearchQuery = ''; hSearchPage = 0; hSearchHasMore = true;
+		historyListEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);">⏳</div>';
+		fetch(`/History/LoadMoreHistory?pageIndex=0`)
+			.then(r => r.text())
+			.then(html => { historyListEl.innerHTML = html; })
+			.catch(err => console.error('Liste yüklenemedi:', err));
+	}
+
+	// ── BEĞENİLENLER ARAMA ──
+	async function startLikedSearch(query) {
+		lSearchQuery = query;
+		lSearchPage = 0;
+		lSearchHasMore = true;
+		lSearchMode = true;
+
+		likedListEl.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-size:13px;">⏳ Aranıyor...</div>';
+		await loadLikedSearch(true);
+	}
+
+	async function loadLikedSearch(replace = false) {
+		if (!lSearchHasMore) return;
+
+		try {
+			const url = `/LikedMovie/Search?s=${encodeURIComponent(lSearchQuery)}&pageIndex=${lSearchPage}`;
+			const response = await fetch(url);
+			if (!response.ok) throw new Error('Arama başarısız');
+			const html = await response.text();
+
+			if (replace) {
+				if (html.trim().length === 0) {
+					likedListEl.innerHTML = `
+						<div style="text-align:center;padding:60px 20px;color:var(--muted);">
+							<div style="font-size:48px;margin-bottom:12px;">🔍</div>
+							<div style="font-size:16px;font-weight:600;color:var(--text);">Sonuç bulunamadı</div>
+							<div style="font-size:13px;margin-top:6px;">"${lSearchQuery}" için beğenilenlerinizde film yok.</div>
+						</div>`;
+					lSearchHasMore = false; return;
+				}
+				likedListEl.innerHTML = html;
+			} else {
+				if (html.trim().length === 0) { lSearchHasMore = false; return; }
+				likedListEl.insertAdjacentHTML('beforeend', html);
+			}
+
+			const cardCount = (html.match(/history-card/g) || []).length;
+			if (cardCount < 10) lSearchHasMore = false;
+			lSearchPage++;
+
+		} catch (err) {
+			console.error('Arama hatası:', err);
+			showToast('Arama sırasında hata oluştu.', 'info');
+		}
+	}
+
+	function clearLikedSearch() {
+		lSearchMode = false; lSearchQuery = ''; lSearchPage = 0; lSearchHasMore = true;
+		likedListEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);">⏳</div>';
+		fetch(`/LikedMovie/LoadMoreLikedMovies?pageIndex=0`)
+			.then(r => r.text())
+			.then(html => { likedListEl.innerHTML = html; })
+			.catch(err => console.error('Liste yüklenemedi:', err));
+	}
+
+	// ── SCROLL: tab + mod'a göre doğru arama ──
+	window.addEventListener('scroll', () => {
+		const atBottom = (window.innerHeight + window.scrollY) >= document.body.offsetHeight - 200;
+		if (!atBottom) return;
+
+		const activeTab = getActiveTab();
+		if (activeTab === 'history' && hSearchMode && hSearchHasMore) {
+			loadHistorySearch(false);
+		} else if (activeTab === 'liked' && lSearchMode && lSearchHasMore) {
+			loadLikedSearch(false);
+		} else if (activeTab === 'disliked' && dSearchMode && dSearchHasMore) {
+			loadDislikedSearch(false);
+		}
+	});
+
+	// ── BEĞENİLMEYENLER ARAMA ──
+	async function startDislikedSearch(query) {
+		dSearchQuery = query;
+		dSearchPage = 0;
+		dSearchHasMore = true;
+		dSearchMode = true;
+
+		dislikedListEl.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-size:13px;">⏳ Aranıyor...</div>';
+		await loadDislikedSearch(true);
+	}
+
+	async function loadDislikedSearch(replace = false) {
+		if (!dSearchHasMore) return;
+
+		try {
+			const url = `/UnlikedMovie/Search?s=${encodeURIComponent(dSearchQuery)}&pageIndex=${dSearchPage}`;
+			const response = await fetch(url);
+			if (!response.ok) throw new Error('Arama başarısız');
+			const html = await response.text();
+
+			if (replace) {
+				if (html.trim().length === 0) {
+					dislikedListEl.innerHTML = `
+						<div style="text-align:center;padding:60px 20px;color:var(--muted);">
+							<div style="font-size:48px;margin-bottom:12px;">🔍</div>
+							<div style="font-size:16px;font-weight:600;color:var(--text);">Sonuç bulunamadı</div>
+							<div style="font-size:13px;margin-top:6px;">"${dSearchQuery}" için beğenilmeyenlerinizde film yok.</div>
+						</div>`;
+					dSearchHasMore = false; return;
+				}
+				dislikedListEl.innerHTML = html;
+			} else {
+				if (html.trim().length === 0) { dSearchHasMore = false; return; }
+				dislikedListEl.insertAdjacentHTML('beforeend', html);
+			}
+
+			const cardCount = (html.match(/history-card/g) || []).length;
+			if (cardCount < 10) dSearchHasMore = false;
+			dSearchPage++;
+
+		} catch (err) {
+			console.error('Arama hatası:', err);
+			showToast('Arama sırasında hata oluştu.', 'info');
+		}
+	}
+
+	function clearDislikedSearch() {
+		dSearchMode = false; dSearchQuery = ''; dSearchPage = 0; dSearchHasMore = true;
+		dislikedListEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);">⏳</div>';
+		fetch(`/UnlikedMovie/LoadMoreUnlikedMovies?pageIndex=0`)
+			.then(r => r.text())
+			.then(html => { dislikedListEl.innerHTML = html; })
+			.catch(err => console.error('Liste yüklenemedi:', err));
+	}
+</script>

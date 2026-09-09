@@ -1,0 +1,204 @@
+@model AddForumDto
+
+@{
+    ViewData["Title"] = "Yeni Konu Aç";
+}
+
+<style>
+    .forum-add-container {
+        padding: 20px;
+        color: #e4e4e6;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .forum-add-header {
+        margin-bottom: 25px;
+        border-bottom: 1px solid #2a2a2a;
+        padding-bottom: 15px;
+    }
+
+    .forum-add-header h1 {
+        font-size: 24px;
+        color: #f5b041;
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #ddd;
+        font-size: 15px;
+        font-weight: 500;
+    }
+
+    .form-control {
+        width: 100%;
+        background-color: #1a1a1a;
+        border: 1px solid #333;
+        color: #fff;
+        padding: 12px 15px;
+        border-radius: 6px;
+        font-size: 15px;
+        font-family: inherit;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #f5b041;
+        box-shadow: 0 0 0 2px rgba(245, 176, 65, 0.2);
+    }
+
+    textarea.form-control {
+        min-height: 200px;
+        resize: vertical;
+    }
+
+    .form-actions {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-top: 30px;
+    }
+
+    .submit-btn {
+        background-color: #f5b041;
+        color: #1a1a1a;
+        border: none;
+        padding: 12px 28px;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 15px;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .submit-btn:hover {
+        background-color: #f39c12;
+        transform: translateY(-1px);
+    }
+    
+    .submit-btn:active {
+        transform: scale(0.98);
+    }
+
+    .cancel-link {
+        color: var(--muted, #888);
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+        padding: 12px 20px;
+        border-radius: 8px;
+        border: 1px solid rgba(255,255,255,0.1);
+        background: rgba(255,255,255,0.04);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+
+    .cancel-link:hover {
+        color: #fff;
+        background: rgba(255,255,255,0.08);
+        border-color: rgba(255,255,255,0.2);
+    }
+
+    @@media (max-width: 768px) {
+        .forum-add-container {
+            padding: 14px 10px;
+        }
+
+        .forum-add-header h1 {
+            font-size: 20px;
+        }
+
+        .forum-add-box {
+            padding: 18px 14px !important;
+        }
+
+        .form-control {
+            padding: 10px 12px;
+            font-size: 14px;
+        }
+
+        .form-actions {
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 24px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            text-align: center;
+            font-size: 15px;
+        }2
+
+        .cancel-link {
+            width: 100%;
+            padding: 12px;
+            text-align: center;
+            font-size: 14px;
+        }
+    }
+</style>
+
+<div class="topbar">
+    <a href="/Forum/Index" class="topbar-logo" style="text-decoration: none; display: flex; align-items: center; gap: 8px;">
+        <span style="font-family: 'Bebas Neue', sans-serif; font-size: 26px; color: var(--accent, #e8b84b); letter-spacing: 1.5px; line-height: 1;">MovieApp</span>
+        <span style="font-size: 10px; color: var(--muted); background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px; font-weight: 600; letter-spacing: 0.5px;">FORUM</span>
+    </a>
+    <div class="topbar-actions" style="margin-left: auto;">
+        <div class="icon-btn" id="notifBell">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            <div class="notif-dot" style="display:none;"></div>
+        </div>
+        <div class="icon-btn dark-mode-btn" id="darkModeBtn" onclick="toggleDarkMode()" title="Karanlık/Aydınlık mod">
+            <span class="dm-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg></span>
+        </div>
+    </div>
+</div>
+
+<div class="forum-add-container">
+    <div class="forum-add-header">
+        <h1>Yeni Konu Aç</h1>
+        <p style="color: #888; font-size: 14px; margin-top: 5px;">Aklındaki soruları sor, yeni tartışmalar başlat veya favori filmlerini öner.</p>
+    </div>
+
+    <div class="forum-add-box" style="background-color: #1a1a1a; padding: 30px; border-radius: 8px; border: 1px solid #2a2a2a; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
+        <form method="post" asp-controller="Forum" asp-action="Add">
+            
+            <div class="form-group">
+                <label for="Title">Konu Başlığı</label>
+                <input type="text" asp-for="Title" class="form-control" placeholder="Örn: Hafta sonu için bilim kurgu filmi tavsiyesi arıyorum..." required>
+            </div>
+
+            <div class="form-group">
+                <label for="ForumCategoryId">Kategori Seçin</label>
+                <select asp-for="ForumCategoryId" class="form-control" required>
+                    <option value="" disabled selected>-- Lütfen bir kategori seçin --</option>
+                   @await Component.InvokeAsync("_ForumCategoryListComponent")
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="Details">Konu İçeriği</label>
+                <textarea asp-for="Details" class="form-control" placeholder="Aklından geçenleri detaylıca yaz... Filmin adı, türü vb. bilgiler ekleyebilirsin." required></textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="submit-btn">Konuyu Aç</button>
+                <a href="/Forum/Index" class="cancel-link">Geri Dön</a>
+            </div>
+
+        </form>
+    </div>
+</div>

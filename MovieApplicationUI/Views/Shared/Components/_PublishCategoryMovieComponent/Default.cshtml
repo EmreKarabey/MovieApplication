@@ -1,0 +1,6 @@
+﻿@model List<PublishMovieCategoryDto>
+
+@foreach (var item in Model)
+{
+	<option value="@item.EntityId">@item.CategoryName</option>
+}

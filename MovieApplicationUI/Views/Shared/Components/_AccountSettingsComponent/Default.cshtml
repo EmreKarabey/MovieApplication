@@ -1,0 +1,146 @@
+ <div class="settings-section active" id="sec-account">
+    <div class="section-title">Hesap Bilgileri</div>
+
+    <div class="setting-group">
+        <div class="setting-item">
+            <div class="setting-info">
+                <div class="setting-name">E-posta Adresi</div>
+                <div class="setting-desc">Kayıtlı e-posta: @(ViewBag.Email ?? "ornek@gmail.com")</div>
+            </div>
+            <div class="setting-action">
+                <button class="btn btn-outline" onclick="openModal('emailModal')">Değiştir</button>
+            </div>
+        </div>
+
+        <div class="setting-item">
+            <div class="setting-info">
+                <div class="setting-name">Şifre</div>
+                <div class="setting-desc">Hesabınızın giriş şifresini güncelleyin.</div>
+            </div>
+            <div class="setting-action">
+                <button class="btn btn-outline" onclick="openModal('passwordResetModal')">Şifre Sıfırla</button>
+            </div>
+        </div>
+
+        <div class="setting-item">
+            <div class="setting-info">
+                <div class="setting-name">İki Adımlı Doğrulama (2FA)</div>
+                <div class="setting-desc">Giriş yaparken ekstra bir güvenlik katmanı ekler.</div>
+            </div>
+            <div class="setting-action">
+                <label class="switch">
+                <input type="checkbox" id="twoFactorSwitch" @(ViewBag.Is2FAEnabled == true ? "checked" : "") onchange="handle2FAToggle(this)">
+                <span class="slider"></span>
+            </label>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal-overlay" id="emailModal">
+    <div class="modal-box">
+        <div class="modal-header">E-posta Adresini Değiştir</div>
+        <div class="modal-desc">Yeni bir e-posta adresi girin. Doğrulama linki yeni adresinize gönderilecektir.</div>
+
+        <div class="modal-form-group">
+            <label class="modal-label">Mevcut E-posta</label>
+            <input type="text" class="modal-input" value="@ViewBag.Email" disabled>
+        </div>
+
+        <div class="modal-form-group">
+            <label class="modal-label">Yeni E-posta</label>
+            <input type="email" id="newEmailInput" class="modal-input" placeholder="yeni.adres@gmail.com">
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="closeModal('emailModal')">İptal</button>
+            <button type="button" class="btn btn-primary" onclick="sendVerificationEmail()">Kaydet</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="verifyModal">
+    <div class="modal-box">
+        <div class="modal-header">Doğrulama Kodu</div>
+        <div class="modal-desc">Lütfen mevcut e-posta adresinize gönderilen 6 haneli doğrulama kodunu girin.</div>
+
+        <div class="modal-form-group">
+            <label class="modal-label" style="text-align: center;">Kod</label>
+            <input type="text" id="verificationCodeInput" class="modal-input" placeholder="000000" maxlength="6" style="text-align: center; font-size: 24px; letter-spacing: 8px; font-weight: bold;">
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="closeModal('verifyModal'); openModal('emailModal')">Geri</button>
+            <button type="button" class="btn btn-primary" onclick="verifyEmailCode()">Onayla</button>
+        </div>
+    </div>
+</div>
+
+<!-- ŞİFRE SIFIRLAMA 1. ADIM: Kod Gönderme -->
+<div class="modal-overlay" id="passwordResetModal">
+    <div class="modal-box">
+        <div class="modal-header">Şifre Sıfırla</div>
+        <div class="modal-desc">Güvenliğiniz için şifrenizi sıfırlamadan önce mevcut e-posta adresinize bir doğrulama kodu göndereceğiz.</div>
+
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="closeModal('passwordResetModal')">İptal</button>
+            <button type="button" class="btn btn-primary" onclick="sendPasswordResetCode()">Kod Gönder</button>
+        </div>
+    </div>
+</div>
+
+<!-- ŞİFRE SIFIRLAMA 2. ADIM: Kod ve Yeni Şifre -->
+<div class="modal-overlay" id="passwordVerifyModal">
+    <div class="modal-box">
+        <div class="modal-header">Yeni Şifre Belirleme</div>
+        <div class="modal-desc">Lütfen e-postanıza gelen 6 haneli kodu ve yeni şifrenizi girin.</div>
+
+        <div class="modal-form-group">
+            <label class="modal-label" style="text-align: center;">Kod</label>
+            <input type="text" id="passwordResetCodeInput" class="modal-input" placeholder="000000" maxlength="6" style="text-align: center; font-size: 24px; letter-spacing: 8px; font-weight: bold;">
+        </div>
+
+        <div class="modal-form-group">
+            <label class="modal-label">Yeni Şifre</label>
+            <input type="password" id="newPasswordInput" class="modal-input" placeholder="••••••••">
+        </div>
+
+        <div class="modal-form-group">
+            <label class="modal-label">Yeni Şifre (Tekrar)</label>
+            <input type="password" id="confirmNewPasswordInput" class="modal-input" placeholder="••••••••">
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="closeModal('passwordVerifyModal'); openModal('passwordResetModal')">Geri</button>
+            <button type="button" class="btn btn-primary" onclick="verifyPasswordReset()">Şifreyi Güncelle</button>
+        </div>
+    </div>
+</div>
+
+<!-- 2FA KURULUM MODALI -->
+<div class="modal-overlay" id="twoFactorSetupModal">
+    <div class="modal-box">
+        <div class="modal-header">2FA Kurulumu</div>
+        <div class="modal-desc">Authenticator uygulamanıza (Google Authenticator vb.) aşağıdaki gizli anahtarı girin ve üretilen 6 haneli kodu doğrulayın.</div>
+
+        <div class="modal-form-group" style="align-items: center;">
+            <div id="qrcodeBox" style="margin: 10px 0; padding: 16px; background: white; border-radius: 12px; display: inline-block;"></div>
+        </div>
+
+        <div class="modal-form-group">
+            <label class="modal-label">Gizli Anahtar (Manuel Kurulum İçin)</label>
+            <input type="text" id="twoFactorSecretKey" class="modal-input" disabled style="text-align: center; font-family: monospace; font-size: 16px; letter-spacing: 2px;">
+        </div>
+
+        <div class="modal-form-group">
+            <label class="modal-label" style="text-align: center;">Doğrulama Kodu</label>
+            <input type="text" id="twoFactorCodeInput" class="modal-input" placeholder="000000" maxlength="6" style="text-align: center; font-size: 24px; letter-spacing: 8px; font-weight: bold;">
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="cancel2FASetup()">İptal</button>
+            <button type="button" class="btn btn-primary" onclick="verify2FASetup()">Doğrula ve Aktif Et</button>
+        </div>
+    </div>
+</div>

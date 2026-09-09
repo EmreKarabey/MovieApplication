@@ -1,0 +1,967 @@
+@model LoginDto
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giriş - MovieApp</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+
+    <!-- GOOGLE IDENTITY SERVICES -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+    <!-- JQUERY KÜTÜPHANESİ EKLENDİ -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <style>
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #0a0a0f;
+            --surface: #12121a;
+            --surface2: #1a1a26;
+            --border: rgba(255,255,255,0.06);
+            --accent: #e8b84b;
+            --accent2: #c0392b;
+            --text: #f0ede8;
+            --muted: #6b6878;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* ... (Sol panel ve animasyon CSS kodların aynı kalıyor, burayı kısa tuttum) ... */
+        .left-panel {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 48px;
+        }
+
+        .left-bg {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, #151522 0%, #0a0a0f 100%);
+        }
+
+        .left-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .left-logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 36px;
+            letter-spacing: 4px;
+            color: var(--accent);
+            margin-bottom: 4px;
+        }
+
+        .left-tagline {
+            font-size: 11px;
+            letter-spacing: 3px;
+            color: var(--muted);
+            text-transform: uppercase;
+            margin-bottom: 32px;
+        }
+
+        .left-heading {
+            font-family: 'DM Serif Display', serif;
+            font-size: 36px;
+            line-height: 1.15;
+            margin-bottom: 16px;
+        }
+
+            .left-heading em {
+                color: var(--accent);
+                font-style: italic;
+            }
+
+        .left-desc {
+            font-size: 13px;
+            color: rgba(240,237,232,0.55);
+            line-height: 1.7;
+            max-width: 380px;
+            margin-bottom: 28px;
+        }
+
+        .features {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+            color: rgba(240,237,232,0.6);
+        }
+
+        .feature-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            flex-shrink: 0;
+        }
+
+        .float-cards {
+            position: absolute;
+            top: 10%;
+            right: -10px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 2;
+            opacity: 0.85;
+        }
+
+        .float-card {
+            background: rgba(18,18,26,0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 16px;
+            width: 180px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+            .float-card:nth-child(2) {
+                animation-delay: 1s;
+                margin-left: 20px;
+            }
+
+            .float-card:nth-child(3) {
+                animation-delay: 2s;
+            }
+
+        .fc-head {
+            font-size: 9px;
+            letter-spacing: 2px;
+            color: var(--muted);
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .fc-val {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 22px;
+            color: var(--accent);
+        }
+
+        .fc-sub {
+            font-size: 10px;
+            color: var(--muted);
+        }
+        @@keyframes float {
+            0%, 100%
+
+        {
+            transform: translateY(0);
+        }
+
+        50% {
+            transform: translateY(-6px);
+        }
+
+        }
+
+        .right-panel {
+            width: 460px;
+            flex-shrink: 0;
+            background: var(--surface);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 48px 44px;
+            position: relative;
+            overflow-y: auto;
+        }
+
+            .right-panel::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                right: 0;
+                width: 1px;
+                height: 100%;
+                background: var(--border);
+            }
+
+        .auth-tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 36px;
+            background: var(--surface2);
+            border-radius: 10px;
+            padding: 4px;
+        }
+
+        .auth-tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 7px;
+            transition: all 0.2s;
+            color: var(--muted);
+        }
+
+            .auth-tab.active {
+                background: var(--bg);
+                color: var(--text);
+                box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            }
+
+        form.auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .auth-heading {
+            font-family: 'DM Serif Display', serif;
+            font-size: 26px;
+            margin-bottom: 6px;
+        }
+
+        .auth-sub {
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 8px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .form-row .form-group {
+            width: 100%;
+            min-width: 0;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 100%;
+        }
+
+        .form-label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            color: rgba(240,237,232,0.7);
+        }
+
+        .form-input {
+            width: 100%;
+            box-sizing: border-box;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 11px 14px;
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+            .form-input:focus {
+                border-color: rgba(232,184,75,0.5);
+            }
+
+            .form-input::placeholder {
+                color: var(--muted);
+            }
+
+        .input-wrap {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .form-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .remember {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--muted);
+            cursor: pointer;
+        }
+
+            .remember input {
+                accent-color: var(--accent);
+                width: 14px;
+                height: 14px;
+            }
+
+        .forgot {
+            font-size: 12px;
+            color: var(--accent);
+            cursor: pointer;
+            text-decoration: none;
+            background: none;
+            border: none;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+            .forgot:hover {
+                text-decoration: underline;
+            }
+
+        .btn-submit {
+            background: var(--accent);
+            color: var(--bg);
+            font-weight: 700;
+            font-size: 14px;
+            padding: 14px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'DM Sans', sans-serif;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+
+            .btn-submit:hover {
+                background: #f0c55a;
+                transform: translateY(-1px);
+                box-shadow: 0 8px 24px rgba(232,184,75,0.25);
+            }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .divider-line {
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .divider-text {
+            font-size: 11px;
+            color: var(--muted);
+            white-space: nowrap;
+        }
+
+        .social-btns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .social-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 11px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--surface2);
+            color: var(--text);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+            .social-btn:hover {
+                border-color: rgba(255,255,255,0.2);
+                background: rgba(255,255,255,0.05);
+            }
+
+        .switch-text {
+            text-align: center;
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 8px;
+        }
+
+        .switch-link {
+            color: var(--accent);
+            cursor: pointer;
+            font-weight: 600;
+            background: none;
+            border: none;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 12px;
+        }
+
+            .switch-link:hover {
+                text-decoration: underline;
+            }
+
+        /* REGISTER / LOGIN TOGGLE */
+        .register-only {
+            display: none !important;
+        }
+
+        .login-only {
+            display: flex;
+        }
+
+        .divider.login-only {
+            display: flex;
+        }
+
+        .social-btns.login-only {
+            display: grid;
+        }
+
+        .form-footer.login-only {
+            display: flex;
+        }
+
+        .switch-text.login-only {
+            display: block;
+        }
+
+        /* REGISTER MODE ACTIVE */
+        .register-mode .login-only {
+            display: none !important;
+        }
+
+        .register-mode .register-only {
+            display: flex !important;
+        }
+
+        .register-mode div.form-row.register-only {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .register-mode .pw-strength.register-only {
+            display: flex !important;
+        }
+
+        .register-mode div.form-group.register-only {
+            display: flex !important;
+            flex-direction: column !important;
+        }
+
+        .register-mode .switch-text.register-only {
+            display: block !important;
+        }
+
+        .pw-strength {
+            display: flex;
+            gap: 4px;
+            margin-top: 6px;
+        }
+
+        .pw-bar {
+            flex: 1;
+            height: 3px;
+            border-radius: 2px;
+            background: var(--border);
+            transition: background 0.3s;
+        }
+
+            .pw-bar.weak {
+                background: var(--accent2);
+            }
+
+            .pw-bar.medium {
+                background: var(--accent);
+            }
+
+            .pw-bar.strong {
+                background: #27ae60;
+            }
+
+        .terms {
+            font-size: 11px;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+            .terms a {
+                color: var(--accent);
+            }
+
+        @@media (max-width: 900px) {
+            body {
+                display: flex;
+                flex-direction: column;
+                overflow-y: auto !important;
+                min-height: 100vh;
+                height: auto;
+            }
+
+            .left-panel {
+                flex: none;
+                padding: 32px 20px 20px;
+                justify-content: center;
+                text-align: center;
+            }
+
+            .float-cards,
+            .features,
+            .left-desc {
+                display: none;
+            }
+
+            .left-logo {
+                font-size: 28px;
+                margin-bottom: 2px;
+            }
+
+            .left-tagline {
+                margin-bottom: 8px;
+            }
+
+            .left-heading {
+                font-size: 22px;
+                margin-bottom: 0;
+            }
+
+            .right-panel {
+                width: 100%;
+                border-left: none;
+                border-top: 1px solid var(--border);
+                padding: 24px 20px 48px;
+                flex: 1;
+            }
+
+            .auth-tabs {
+                margin-bottom: 24px;
+            }
+        }
+
+        @@media (max-width: 480px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .social-btns {
+                grid-template-columns: 1fr;
+            }
+
+            .right-panel {
+                padding: 20px 16px 40px;
+            }
+
+            .auth-heading {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- LEFT PANEL -->
+    <div class="left-panel">
+        <div class="left-bg"></div>
+        <div class="float-cards">
+            <div class="float-card">
+                <div class="fc-head">🎬 Bu Hafta</div>
+                <div class="fc-val">+47</div>
+                <div class="fc-sub">Yeni Film Eklendi</div>
+            </div>
+            <div class="float-card">
+                <div class="fc-head">⭐ Ortalama Puan</div>
+                <div class="fc-val">8.2</div>
+                <div class="fc-sub">Tüm Zamanlar</div>
+            </div>
+            <div class="float-card">
+                <div class="fc-head">👥 Üye</div>
+                <div class="fc-val">124K</div>
+                <div class="fc-sub">Aktif İzleyici</div>
+            </div>
+        </div>
+        <div class="left-content">
+            <div class="left-logo">Movie App</div>
+            <div class="left-tagline">Streaming Platform</div>
+            <div class="left-heading">Binlerce Film,<br><em>Sınırsız</em> Keyif</div>
+            <div class="left-desc">
+                En yeni filmler, diziler ve belgeseller tek platformda. Kişiselleştirilmiş öneriler, yorumlar ve çok daha fazlası.
+            </div>
+            <div class="features">
+                <div class="feature-item"><div class="feature-dot"></div>4K HDR destekli akış</div>
+                <div class="feature-item"><div class="feature-dot"></div>10.000+ film ve dizi arşivi</div>
+                <div class="feature-item"><div class="feature-dot"></div>Kişisel izleme listesi</div>
+                <div class="feature-item"><div class="feature-dot"></div>Yorum ve puan sistemi</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="right-panel">
+        <div class="auth-tabs">
+            <div class="auth-tab active" onclick="switchTab('login')">Giriş Yap</div>
+            <div class="auth-tab" onclick="switchTab('register')">Üye Ol</div>
+        </div>
+
+        <form class="auth-form" id="authForm" onsubmit="submitAuth(event)">
+            <div>
+                <div class="auth-heading" id="formHeading">Tekrar Hoşgeldin</div>
+                <div class="auth-sub" id="formSub">Hesabına giriş yap ve izlemeye devam et.</div>
+            </div>
+
+            <!-- Ad Soyad (Sadece Kayıt) -->
+            <div class="form-row register-only">
+                <div class="form-group">
+                    <div class="form-label">Ad</div>
+                    <!-- ID EKLENDİ -->
+                    <input class="form-input" id="regFirstName" type="text" placeholder="Emre" />
+                </div>
+                <div class="form-group">
+                    <div class="form-label">Soyad</div>
+                    <!-- ID EKLENDİ -->
+                    <input class="form-input" id="regLastName" type="text" placeholder="Yılmaz" />
+                </div>
+            </div>
+
+            <!-- E-posta -->
+            <div class="form-group">
+                <div class="form-label">E-posta</div>
+                <div class="input-wrap">
+                    <!-- ID EKLENDİ -->
+                    <input class="form-input" id="emailInput" type="email" placeholder="ornek@email.com" style="width:100%;padding-right:36px;" />
+                    <span class="input-icon">✉</span>
+                </div>
+            </div>
+
+            <!-- Şifre -->
+            <div class="form-group">
+                <div class="form-label">Şifre</div>
+                <div class="input-wrap">
+                    <!-- ID ZATEN VARDI -->
+                    <input class="form-input" id="pwInput" type="password" placeholder="••••••••" style="width:100%;padding-right:36px;" oninput="checkStrength(this.value)" />
+                    <span class="input-icon" onclick="togglePw()">👁</span>
+                </div>
+                <div class="pw-strength register-only" id="pwStrength">
+                    <div class="pw-bar" id="bar1"></div>
+                    <div class="pw-bar" id="bar2"></div>
+                    <div class="pw-bar" id="bar3"></div>
+                    <div class="pw-bar" id="bar4"></div>
+                </div>
+            </div>
+
+            <!-- Şifre Tekrar (Sadece Kayıt) -->
+            <div class="form-group register-only">
+                <div class="form-label">Şifre Tekrar</div>
+                <div class="input-wrap">
+                    <!-- ID EKLENDİ -->
+                    <input class="form-input" id="pwConfirmInput" type="password" placeholder="••••••••" style="width:100%;padding-right:36px;" />
+                    <span class="input-icon">👁</span>
+                </div>
+            </div>
+
+            <!-- Beni Hatırla (Sadece Giriş) -->
+            <div class="form-footer login-only">
+                <label class="remember">
+                    <!-- ID EKLENDİ -->
+                    <input type="checkbox" id="rememberMeInput" /> Beni Hatırla
+                </label>
+                <button class="forgot">Şifremi Unuttum</button>
+            </div>
+
+            <button type="submit" class="btn-submit" id="submitBtn">Giriş Yap</button>
+
+            <!-- GOOGLE İLE GİRİŞ -->
+            <div class="divider login-only" style="margin-top: 8px;">
+                <div class="divider-line"></div>
+                <div class="divider-text">veya</div>
+                <div class="divider-line"></div>
+            </div>
+
+            <div class="social-btns login-only" style="grid-template-columns: 1fr; position: relative;">
+                <div id="g_id_onload"
+                     data-client_id="1470086286-ofqupc88osouibg41c66kg5t7j4b94n4.apps.googleusercontent.com"
+                     data-context="signin"
+                     data-ux_mode="popup"
+                     data-callback="handleGoogleLogin"
+                     data-auto_prompt="false">
+                </div>
+
+                <div class="g_id_signin"
+                     data-type="standard"
+                     data-shape="rectangular"
+                     data-theme="filled_black"
+                     data-text="signin_with"
+                     data-size="large"
+                     data-logo_alignment="left"
+                     style="display: flex; justify-content: center;">
+                </div>
+            </div>
+
+            <div class="switch-text login-only">
+                Hesabın yok mu? <button class="switch-link" onclick="switchTab('register')">Üye Ol</button>
+            </div>
+            <div class="switch-text register-only" style="display:none;">
+                Zaten hesabın var mı? <button class="switch-link" onclick="switchTab('login')">Giriş Yap</button>
+            </div>
+
+        </form>
+
+        <!-- 2FA DOĞRULAMA FORMU -->
+        <form class="auth-form" id="twoFactorForm" onsubmit="verify2FALogin(event)" style="display: none;">
+            <div>
+                <div class="auth-heading">Güvenlik Kontrolü</div>
+                <div class="auth-sub">Lütfen Authenticator uygulamanızdaki 6 haneli kodu girin.</div>
+            </div>
+            
+            <div class="form-group">
+                <div class="form-label">Doğrulama Kodu</div>
+                <div class="input-wrap">
+                    <input class="form-input" id="login2FaCode" type="text" placeholder="000000" style="width:100%; text-align: center; letter-spacing: 4px; font-size: 18px; font-weight: 600;" maxlength="6" autocomplete="off" />
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit" id="btnVerify2FA">Doğrula</button>
+            
+            <div class="switch-text" style="margin-top: 16px;">
+                <button type="button" class="switch-link" onclick="cancel2FA()">Geri Dön</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        let isRegister = false;
+        let currentLoginEmail = ""; // 2FA doğrulaması için email bilgisini tutacağız
+
+        // Sekme Değiştirme Mantığı
+        function switchTab(mode) {
+            isRegister = mode === 'register';
+            document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', i === (isRegister ? 1 : 0)));
+            const form = document.getElementById('authForm');
+            if (isRegister) {
+                form.classList.add('register-mode');
+                document.getElementById('formHeading').textContent = 'Hesap Oluştur';
+                document.getElementById('formSub').textContent = 'Ücretsiz kaydol, hemen izlemeye başla.';
+                document.getElementById('submitBtn').textContent = 'Üye Ol';
+                document.querySelector('.switch-text.register-only').style.display = 'block';
+            } else {
+                form.classList.remove('register-mode');
+                document.getElementById('formHeading').textContent = 'Tekrar Hoşgeldin';
+                document.getElementById('formSub').textContent = 'Hesabına giriş yap ve izlemeye devam et.';
+                document.getElementById('submitBtn').textContent = 'Giriş Yap';
+                document.querySelector('.switch-text.register-only').style.display = 'none';
+            }
+        }
+
+        // Şifre Göster/Gizle
+        function togglePw() {
+            const inp = document.getElementById('pwInput');
+            inp.type = inp.type === 'password' ? 'text' : 'password';
+        }
+
+        // Şifre Güç Çubuğu
+        function checkStrength(val) {
+            const bars = ['bar1','bar2','bar3','bar4'];
+            bars.forEach(b => { document.getElementById(b).className = 'pw-bar'; });
+            if (val.length === 0) return;
+            const score = [val.length >= 8, /[A-Z]/.test(val), /[0-9]/.test(val), /[^a-zA-Z0-9]/.test(val)].filter(Boolean).length;
+            const cls = score <= 1 ? 'weak' : score <= 3 ? 'medium' : 'strong';
+            for (let i = 0; i < score; i++) document.getElementById(bars[i]).classList.add(cls);
+        }
+
+        // AJAX İŞLEMLERİ
+        function submitAuth(e) {
+            e.preventDefault(); // Sayfanın yenilenmesini durdur
+
+            // Butonu kilitleyelim ki çoklu tıklama olmasın
+            const btn = document.getElementById('submitBtn');
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = "Lütfen bekleyin...";
+
+            // 1. Controller'daki Hangi Action'a Gideceğiz?
+            let endpointUrl = isRegister ? "/Login/Register" : "/Login/Index";
+            let payload = {};
+
+            // 2. Verileri Topla
+            if (isRegister) {
+                // Şifre eşleşme kontrolü
+                if(document.getElementById('pwInput').value !== document.getElementById('pwConfirmInput').value) {
+                    alert("Şifreler eşleşmiyor!");
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                    return;
+                }
+
+                payload = {
+                    FirstName: document.getElementById('regFirstName').value,
+                    LastName: document.getElementById('regLastName').value,
+                    Email: document.getElementById('emailInput').value,
+                    Password: document.getElementById('pwInput').value,
+                    ComparePassword: document.getElementById('pwConfirmInput').value
+                };
+            } else {
+                payload = {
+                    Email: document.getElementById('emailInput').value,
+                    Password: document.getElementById('pwInput').value,
+                    RememberMe: document.getElementById('rememberMeInput').checked
+                };
+            }
+
+            // 3. Backend'e Gönder
+            $.ajax({
+                type: "POST",
+                url: endpointUrl,
+                data: JSON.stringify(payload),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (response) {
+                    if(response.success) {
+                        if(isRegister) {
+                            alert("Kayıt başarılı! Şimdi giriş yapabilirsiniz.");
+                            switchTab('login'); // Başarılıysa giriş sekmesine dön
+                            btn.disabled = false;
+                            btn.textContent = "Giriş Yap";
+                        } else {
+                            if (response.requires2FA) {
+                                // 2FA Paneli Gösterilecek
+                                currentLoginEmail = document.getElementById('emailInput').value;
+                                document.getElementById('authForm').style.display = 'none';
+                                document.querySelector('.auth-tabs').style.display = 'none';
+                                document.getElementById('twoFactorForm').style.display = 'flex';
+                                
+                                btn.disabled = false;
+                                btn.textContent = originalText;
+                                
+                                // Modal açıldığında inputa focus ol
+                                setTimeout(() => { document.getElementById('login2FaCode').focus(); }, 100);
+                            } else {
+                                // Login başarılıysa yönlendir
+                                window.location.href = response.redirectUrl || "/Home/Index";
+                            }
+                        }
+                    } else {
+                        alert("Hata: " + response.message);
+                        btn.disabled = false;
+                        btn.textContent = originalText;
+                    }
+                },
+                error: function (err) {
+                    console.error("AJAX Hatası:", err);
+                    alert("Sunucu ile iletişimde bir hata oluştu.");
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                }
+            });
+        }
+
+        // 2FA PANELİ İŞLEMLERİ
+        function cancel2FA() {
+            document.getElementById('twoFactorForm').style.display = 'none';
+            document.getElementById('authForm').style.display = 'flex';
+            document.querySelector('.auth-tabs').style.display = 'flex';
+            document.getElementById('login2FaCode').value = '';
+        }
+
+        function verify2FALogin(e) {
+            e.preventDefault();
+            const code = document.getElementById('login2FaCode').value;
+            
+            if (!code || code.length !== 6) {
+                alert("Lütfen 6 haneli kodu eksiksiz girin.");
+                return;
+            }
+
+            const btn = document.getElementById('btnVerify2FA');
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = "Doğrulanıyor...";
+
+            // TODO: Backend tarafında "/Login/Verify2FALogin" adresi tanımlandığında bu kod tam çalışacaktır.
+            $.ajax({
+                type: "POST",
+                url: "/Login/Verify2FALogin",
+                data: JSON.stringify({ Email: currentLoginEmail, Code: code }),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (response) {
+                    if (response.success) {
+                        window.location.href = response.redirectUrl || "/Home/Index";
+                    } else {
+                        alert(response.message || "Hatalı kod girdiniz.");
+                        btn.disabled = false;
+                        btn.textContent = originalText;
+                    }
+                },
+                error: function (err) {
+                    console.error("2FA Doğrulama Hatası:", err);
+                    alert("Sunucu ile iletişimde hata oluştu.");
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                }
+            });
+        }
+
+        // GOOGLE LOGIN CALLBACK
+        function handleGoogleLogin(response) {
+            // response.credential contains the JWT token from Google
+            $.ajax({
+                type: "POST",
+                url: "/Login/GoogleLogin", // UI Controller'daki Endpoint
+                data: JSON.stringify({ Token: response.credential }),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (res) {
+                    if (res.success) {
+                        window.location.href = res.redirectUrl || "/Home/Index";
+                    } else {
+                        alert(res.message || "Google girişi başarısız oldu.");
+                    }
+                },
+                error: function (err) {
+                    console.error("Google Login Hatası:", err);
+                    alert("Sunucu ile iletişimde hata oluştu.");
+                }
+            });
+        }
+    </script>
+</body>
+</html>

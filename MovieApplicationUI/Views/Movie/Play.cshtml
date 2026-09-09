@@ -1,0 +1,1782 @@
+@{
+
+	ViewData["Title"] = "Play Movie";
+	ViewBag.IsCinemaMode = true;
+	Layout = "~/Views/Shared/_Layout.cshtml";
+	var videoUrl = ViewBag.VideoUrl as string;
+	var movieid = ViewBag.MovieID;
+
+
+	var publisherNameFirstLetter = ((string)ViewBag.PublisherFirstName).Substring(0, 1);
+
+	var PublisherFirstName = ViewBag.PublisherFirstName;
+	var PublisherLastName = ViewBag.PublisherLastName;
+
+}
+
+<style>
+	/* Cinematic Video Player Styles */
+	.d-none {
+		display: none !important;
+	}
+	.cinema-container {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		padding-top: 1rem;
+		margin-bottom: 2rem;
+		width: 100%;
+	}
+
+	.video-wrapper {
+		width: 95%;
+		max-width: 1200px;
+		position: relative;
+		border-radius: 12px;
+		overflow: hidden;
+		box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+		background: #000;
+		transform: translateZ(0);
+		-webkit-transform: translateZ(0);
+		isolation: isolate;
+	}
+
+	.video-player {
+		width: 100%;
+		height: auto;
+		aspect-ratio: 16/9;
+		display: block;
+		object-fit: cover;
+		border-radius: 12px;
+	}
+
+	.cinema-header {
+		width: 90%;
+		max-width: 1200px;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 1rem;
+		color: #c5c6c7;
+	}
+
+	.cinema-title {
+		font-size: 1.5rem;
+		font-weight: 600;
+		margin: 0;
+		color: #fff;
+		display: flex;
+		align-items: center;
+		gap: 12px;
+	}
+
+		.cinema-title svg {
+			color: var(--accent, #e8b84b);
+			filter: drop-shadow(0 0 6px rgba(232, 184, 75, 0.4));
+		}
+
+	.back-btn {
+		background: rgba(255, 255, 255, 0.06);
+		color: var(--text, #f0ede8);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		padding: 9px 18px;
+		border-radius: 10px;
+		text-decoration: none;
+		transition: all 0.3s ease;
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		font-size: 14px;
+		font-weight: 500;
+		backdrop-filter: blur(8px);
+		-webkit-backdrop-filter: blur(8px);
+	}
+
+		.back-btn:hover {
+			background: rgba(232, 184, 75, 0.12);
+			border-color: rgba(232, 184, 75, 0.3);
+			color: var(--accent, #e8b84b);
+			transform: translateX(-3px);
+		}
+
+	.no-video-msg {
+		color: #c5c6c7;
+		text-align: center;
+		padding: 3rem;
+		background: #1f2833;
+		border-radius: 8px;
+		width: 90%;
+		max-width: 600px;
+	}
+
+		.no-video-msg i {
+			font-size: 3rem;
+			margin-bottom: 1rem;
+			color: #45a29e;
+		}
+
+	video::-webkit-media-controls-panel {
+		background-image: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+	}
+
+	/* Interaction Bar Styles */
+	.interaction-bar {
+		width: 90%;
+		max-width: 1200px;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 1rem;
+		margin-top: 1.5rem;
+		padding-bottom: 1.5rem;
+		border-bottom: 1px solid #1f2833;
+	}
+
+	.interaction-group {
+		display: flex;
+		gap: 1rem;
+	}
+
+	/* ── INTERACTION BUTTONS WITH ROTATING TRAIN BEAM ── */
+	.interaction-btn {
+		position: relative;
+		background: #0d0d12;
+		color: #d1d5db;
+		border: 1.5px solid rgba(255, 255, 255, 0.12);
+		padding: 8px 18px;
+		border-radius: 20px;
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		font-size: 0.92rem;
+		font-weight: 500;
+		cursor: pointer;
+		overflow: hidden;
+		z-index: 1;
+		transition: transform 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+	}
+
+	.interaction-btn span,
+	.interaction-btn i {
+		position: relative;
+		z-index: 3;
+	}
+
+	.interaction-btn::after {
+		content: '';
+		position: absolute;
+		inset: 1.5px;
+		background: #0d0d12;
+		border-radius: 18.5px;
+		z-index: 2;
+		transition: background 0.25s ease;
+	}
+
+	.interaction-btn::before {
+		content: '';
+		position: absolute;
+		top: -100%;
+		left: -100%;
+		width: 300%;
+		height: 300%;
+		opacity: 0;
+		animation: rotateBorderBeam 2.2s linear infinite;
+		z-index: 1;
+		transition: opacity 0.25s ease;
+	}
+
+	.interaction-btn:hover::before,
+	.interaction-btn.active::before {
+		opacity: 1;
+	}
+
+	.interaction-btn:hover {
+		transform: translateY(-2px);
+		border-color: transparent;
+	}
+
+	.interaction-btn.active {
+		border-color: transparent;
+	}
+
+	.interaction-btn i {
+		font-size: 1.15rem;
+	}
+
+	/* 1. BEĞEN (LIKE) - Zümrüt Yeşili / Turkuaz Dönen Tren Işığı */
+	.btn-like::before {
+		background: conic-gradient(from 0deg, transparent 0deg, transparent 250deg, rgba(16, 185, 129, 0.3) 290deg, #10b981 330deg, #6ee7b7 360deg);
+	}
+	.btn-like.active,
+	.btn-like:hover {
+		color: #34d399;
+		box-shadow: 0 0 16px rgba(16, 185, 129, 0.45);
+	}
+	.btn-like.active::after {
+		background: #061912;
+	}
+
+	/* 2. BEĞENME (DISLIKE) - Ateş Kırmızısı / Mercan Dönen Tren Işığı */
+	.btn-dislike::before {
+		background: conic-gradient(from 0deg, transparent 0deg, transparent 250deg, rgba(239, 68, 68, 0.3) 290deg, #ef4444 330deg, #fca5a5 360deg);
+	}
+	.btn-dislike.active,
+	.btn-dislike:hover {
+		color: #f87171;
+		box-shadow: 0 0 16px rgba(239, 68, 68, 0.45);
+	}
+	.btn-dislike.active::after {
+		background: #1a0808;
+	}
+
+	/* 3. KAYDET (SAVE) - Ametist / Parlak Mor Dönen Tren Işığı */
+	.btn-save::before {
+		background: conic-gradient(from 0deg, transparent 0deg, transparent 250deg, rgba(168, 85, 247, 0.3) 290deg, #a855f7 330deg, #e9d5ff 360deg);
+	}
+	.btn-save.active,
+	.btn-save:hover {
+		color: #c084fc;
+		box-shadow: 0 0 16px rgba(168, 85, 247, 0.45);
+	}
+	.btn-save.active::after {
+		background: #14081c;
+	}
+
+	/* 4. PAYLAŞ (SHARE) - Elektrik Mavisi / Gökyüzü Dönen Tren Işığı */
+	.btn-share::before {
+		background: conic-gradient(from 0deg, transparent 0deg, transparent 250deg, rgba(6, 182, 212, 0.3) 290deg, #06b6d4 330deg, #bae6fd 360deg);
+	}
+	.btn-share:hover,
+	.btn-share:active {
+		color: #38bdf8;
+		box-shadow: 0 0 16px rgba(6, 182, 212, 0.45);
+	}
+	.btn-share:hover::after {
+		background: #08161f;
+	}
+
+	/* Publisher Info Styles */
+	.publisher-info {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+	}
+
+	.publisher-avatar {
+		width: 42px;
+		height: 42px;
+		border-radius: 50%;
+		background-color: #45a29e;
+		color: #fff;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-weight: bold;
+		font-size: 1.2rem;
+		text-transform: uppercase;
+	}
+
+	.publisher-details {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.publisher-name {
+		color: #fff;
+		font-weight: 600;
+		font-size: 1rem;
+	}
+
+	.publisher-subscribers {
+		color: #c5c6c7;
+		font-size: 0.8rem;
+	}
+
+	/* ── ABONE OL BUTONU: İÇİ SİYAH, KENARI TREN GİBİ SARI IŞIK DÖNEN ── */
+	.btn-subscribe {
+		position: relative;
+		background: transparent;
+		color: #ffd700;
+		border: none;
+		border-radius: 24px;
+		padding: 9px 20px;
+		font-weight: 700;
+		font-size: 0.88rem;
+		cursor: pointer;
+		margin-left: 10px;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 6px;
+		overflow: hidden;
+		z-index: 1;
+		transition: transform 0.25s ease, box-shadow 0.25s ease;
+		box-shadow: 0 0 16px rgba(232, 184, 75, 0.25);
+	}
+
+	.btn-subscribe svg,
+	.btn-subscribe span {
+		position: relative;
+		z-index: 3;
+	}
+
+	/* Dönen sarı tren ışığı */
+	.btn-subscribe::before {
+		content: '';
+		position: absolute;
+		top: -100%;
+		left: -100%;
+		width: 300%;
+		height: 300%;
+		background: conic-gradient(
+			from 0deg,
+			transparent 0deg,
+			transparent 250deg,
+			rgba(232, 184, 75, 0.4) 290deg,
+			#ffd700 330deg,
+			#ffffff 360deg
+		);
+		animation: rotateBorderBeam 2.2s linear infinite;
+		z-index: 1;
+	}
+
+	/* İçi siyah zemin */
+	.btn-subscribe::after {
+		content: '';
+		position: absolute;
+		inset: 2px;
+		background: #0b0b0f;
+		border-radius: 22px;
+		z-index: 2;
+		transition: background 0.25s ease;
+	}
+
+	.btn-subscribe:hover {
+		transform: scale(1.05);
+		box-shadow: 0 0 24px rgba(232, 184, 75, 0.6);
+	}
+
+	.btn-subscribe:hover::after {
+		background: #14141c;
+	}
+
+	@@keyframes rotateBorderBeam {
+		0% {
+			transform: rotate(0deg);
+		}
+		100% {
+			transform: rotate(360deg);
+		}
+	}
+
+	/* ── SUBSCRIBED GROUP & BELL ── */
+	.subscription-group {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		margin-left: 10px;
+		animation: popInSubscription 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+	}
+
+	@@keyframes popInSubscription {
+		0% {
+			transform: scale(0.85);
+			opacity: 0;
+		}
+		100% {
+			transform: scale(1);
+			opacity: 1;
+		}
+	}
+
+	/* ── ABONE OLUNDU: İÇİ SARI, DIŞI SİYAH ── */
+	.btn-subscribed {
+		background: linear-gradient(135deg, #ffd700 0%, #e8b84b 100%);
+		color: #0b0b0f !important;
+		border: 2px solid #000000;
+		padding: 8px 18px;
+		border-radius: 20px;
+		font-weight: 700;
+		font-size: 0.88rem;
+		cursor: pointer;
+		margin-left: 0;
+		transition: all 0.25s ease;
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		box-shadow: 0 0 0 1.5px #ffd700, 0 4px 14px rgba(232, 184, 75, 0.35);
+	}
+
+	.btn-subscribed svg {
+		stroke: #0b0b0f;
+		stroke-width: 2.5;
+	}
+
+	.btn-subscribed:hover {
+		background: linear-gradient(135deg, #ffe066 0%, #f5c454 100%);
+		transform: scale(1.04);
+		box-shadow: 0 0 0 2px #ffffff, 0 6px 20px rgba(232, 184, 75, 0.55);
+	}
+
+	/* Bell Button (Sarı & Siyah Uyumlu) */
+	.bell-container {
+		position: relative;
+		display: inline-block;
+	}
+
+	.btn-bell-toggle {
+		background: #0b0b0f;
+		border: 2px solid #ffd700;
+		color: #ffd700;
+		width: 38px;
+		height: 38px;
+		border-radius: 50%;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+		transition: all 0.25s ease;
+		position: relative;
+		box-shadow: 0 0 10px rgba(232, 184, 75, 0.3);
+	}
+
+	.btn-bell-toggle:hover {
+		background: #ffd700;
+		color: #0b0b0f;
+		border-color: #000000;
+		transform: scale(1.08);
+		box-shadow: 0 0 16px rgba(232, 184, 75, 0.6);
+	}
+
+	.btn-bell-toggle.active {
+		background: linear-gradient(135deg, #ffd700 0%, #e8b84b 100%);
+		color: #0b0b0f;
+		border: 2px solid #000000;
+		box-shadow: 0 0 0 1.5px #ffd700, 0 0 12px rgba(232, 184, 75, 0.4);
+	}
+
+	.btn-bell-toggle.active svg {
+		stroke: #0b0b0f;
+	}
+
+	.bell-ringing {
+		animation: ringBell 0.6s ease-in-out;
+	}
+
+	@@keyframes ringBell {
+		0% { transform: rotate(0); }
+		15% { transform: rotate(18deg); }
+		30% { transform: rotate(-18deg); }
+		45% { transform: rotate(12deg); }
+		60% { transform: rotate(-12deg); }
+		75% { transform: rotate(6deg); }
+		100% { transform: rotate(0); }
+	}
+
+	/* YouTube-style Bell Dropdown */
+	.bell-dropdown-menu {
+		position: absolute;
+		top: calc(100% + 8px);
+		left: 50%;
+		transform: translateX(-50%) translateY(-6px);
+		background: #181820;
+		border: 1px solid rgba(255, 255, 255, 0.15);
+		border-radius: 12px;
+		padding: 6px;
+		width: 190px;
+		box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+		opacity: 0;
+		pointer-events: none;
+		transition: all 0.2s ease;
+		z-index: 1000;
+	}
+
+	.bell-dropdown-menu.show {
+		opacity: 1;
+		pointer-events: auto;
+		transform: translateX(-50%) translateY(0);
+	}
+
+	.bell-option {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding: 10px 12px;
+		border-radius: 8px;
+		cursor: pointer;
+		font-size: 13px;
+		font-weight: 500;
+		color: #e0e0e0;
+		transition: background 0.15s ease;
+	}
+
+	.bell-option:hover {
+		background: rgba(255, 255, 255, 0.08);
+		color: #ffffff;
+	}
+
+	.bell-option.selected {
+		color: var(--accent);
+		background: rgba(232, 184, 75, 0.1);
+		font-weight: 600;
+	}
+
+	.bell-option svg {
+		flex-shrink: 0;
+	}
+
+	.action-buttons-wrapper {
+		display: flex;
+		gap: 1rem;
+		align-items: center;
+		flex-wrap: wrap;
+	}
+
+	/* Comments Section Styles */
+	.comments-section {
+		width: 90%;
+		max-width: 1200px;
+		margin-top: 2rem;
+		text-align: left;
+	}
+
+	.comments-title {
+		color: #fff;
+		font-size: 1.3rem;
+		margin-bottom: 1.5rem;
+		display: flex;
+		align-items: center;
+		gap: 10px;
+	}
+
+	.comment-input-area {
+		display: flex;
+		gap: 1rem;
+		margin-bottom: 2rem;
+	}
+
+	.user-avatar, .comment-avatar {
+		width: 40px;
+		height: 40px;
+		border-radius: 50%;
+		object-fit: cover;
+	}
+
+	.input-wrapper {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+	}
+
+		.input-wrapper textarea {
+			background: transparent;
+			border: none;
+			border-bottom: 1px solid #c5c6c7;
+			color: #fff;
+			resize: none;
+			padding: 5px 0;
+			font-size: 1rem;
+			transition: border-color 0.3s ease;
+		}
+
+			.input-wrapper textarea:focus {
+				outline: none;
+				border-bottom-color: #45a29e;
+			}
+
+	.comment-input-area form {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+	}
+
+		.comment-input-area form textarea {
+			width: 100%;
+		}
+
+	.comment-actions {
+		display: flex;
+		justify-content: flex-end;
+		gap: 10px;
+		margin-top: 10px;
+		opacity: 0;
+		visibility: hidden;
+		transition: opacity 0.3s ease;
+	}
+
+	.input-wrapper textarea:focus ~ .comment-actions,
+	.input-wrapper textarea:not(:placeholder-shown) ~ .comment-actions {
+		opacity: 1;
+		visibility: visible;
+	}
+
+	.btn-cancel {
+		background: transparent;
+		color: #c5c6c7;
+		border: none;
+		padding: 6px 12px;
+		border-radius: 4px;
+		cursor: pointer;
+		transition: all 0.2s ease;
+	}
+
+		.btn-cancel:hover {
+			background: rgba(255, 255, 255, 0.1);
+			color: #fff;
+		}
+
+	.btn-submit {
+		background: #45a29e;
+		color: #fff;
+		border: none;
+		padding: 6px 16px;
+		border-radius: 4px;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		font-weight: 500;
+	}
+
+		.btn-submit:hover {
+			background: #39827e;
+		}
+
+	.comments-list {
+		display: flex;
+		flex-direction: column;
+		gap: 1.5rem;
+	}
+
+	.comment-item {
+		display: flex;
+		gap: 1rem;
+	}
+
+	.comment-content {
+		flex: 1;
+	}
+
+	.comment-header {
+		display: flex;
+		align-items: baseline;
+		gap: 10px;
+		margin-bottom: 4px;
+	}
+
+	.comment-author {
+		color: #fff;
+		font-weight: 600;
+		font-size: 0.95rem;
+	}
+
+	.comment-time {
+		color: #888;
+		font-size: 0.8rem;
+	}
+
+	.comment-text {
+		color: #c5c6c7;
+		font-size: 0.95rem;
+		margin-bottom: 8px;
+		line-height: 1.5;
+	}
+
+	.comment-interactions {
+		display: flex;
+		gap: 15px;
+		align-items: center;
+	}
+
+		.comment-interactions button {
+			background: transparent;
+			border: none;
+			color: #888;
+			font-size: 0.85rem;
+			display: flex;
+			align-items: center;
+			gap: 5px;
+			cursor: pointer;
+			padding: 0;
+			transition: color 0.2s ease;
+		}
+
+			.comment-interactions button:hover {
+				color: #c5c6c7;
+			}
+
+			.comment-interactions button.active {
+				color: #45a29e;
+			}
+
+		/* Responsive Styles for Cinema / Player */
+		@@media (max-width: 768px) {
+			.cinema-container {
+				padding: 0.5rem 0;
+				margin-bottom: 1.5rem;
+			}
+
+			.cinema-header {
+				width: 100%;
+				padding: 0 8px;
+				margin-bottom: 0.75rem;
+			}
+
+			.cinema-title {
+				font-size: 1.2rem;
+				gap: 8px;
+			}
+
+			.back-btn {
+				padding: 6px 12px;
+				font-size: 12px;
+			}
+
+			.video-wrapper {
+				width: 100%;
+				border-radius: 0;
+				box-shadow: none;
+			}
+
+			.video-player {
+				border-radius: 0;
+			}
+
+			.interaction-bar {
+				width: 100%;
+				padding: 1rem 8px;
+				flex-direction: column;
+				align-items: flex-start;
+				gap: 12px;
+			}
+
+			.publisher-info {
+				width: 100%;
+				justify-content: space-between;
+			}
+
+			.action-buttons-wrapper {
+				width: 100%;
+				justify-content: flex-start;
+				overflow-x: auto;
+				padding-bottom: 6px;
+				flex-wrap: nowrap;
+				gap: 8px;
+				scrollbar-width: none;
+			}
+
+			.action-buttons-wrapper::-webkit-scrollbar {
+				display: none;
+			}
+
+			.interaction-group {
+				flex-shrink: 0;
+				gap: 6px;
+			}
+
+			.interaction-btn {
+				padding: 6px 12px;
+				font-size: 0.85rem;
+				white-space: nowrap;
+			}
+
+			.comments-section {
+				width: 100%;
+				padding: 0 12px;
+				margin-top: 1.5rem;
+			}
+
+			.comments-title {
+				font-size: 1.1rem;
+			}
+
+			.comment-input-area {
+				gap: 10px;
+			}
+
+			.user-avatar {
+				width: 34px;
+				height: 34px;
+			}
+
+			.comment-item {
+				gap: 10px;
+			}
+
+			.comment-avatar {
+				width: 34px;
+				height: 34px;
+			}
+
+			.comment-author {
+				font-size: 0.85rem;
+			}
+
+			.comment-text {
+				font-size: 0.88rem;
+			}
+		}
+</style>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+<div class="topbar">
+	<a href="/Home/Index" class="topbar-logo" style="text-decoration: none; display: flex; align-items: center; gap: 8px;">
+		<span style="font-family: 'Bebas Neue', sans-serif; font-size: 26px; color: var(--accent, #e8b84b); letter-spacing: 1.5px; line-height: 1;">MovieApp</span>
+	</a>
+	<div class="topbar-actions" style="margin-left: auto;">
+		<div class="icon-btn" id="notifBell">
+			<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+			<div class="notif-dot" style="display:none;"></div>
+		</div>
+		<div class="icon-btn dark-mode-btn" id="darkModeBtn" onclick="toggleDarkMode()" title="Karanlık/Aydınlık mod">
+			<span class="dm-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg></span>
+		</div>
+	</div>
+</div>
+
+<div class="container-fluid">
+	<div class="cinema-container" style="padding-top: 0.5rem;">
+
+		@if (!string.IsNullOrEmpty(videoUrl))
+		{
+			<div class="video-wrapper">
+				<video id="moviePlayer" class="video-player" controls controlsList="nodownload" preload="metadata" playsinline>
+					<source src="@videoUrl" type="video/mp4">
+					Your browser does not support the video tag.
+				</video>
+			</div>
+
+			@if (!string.IsNullOrEmpty(ViewBag.MovieName as string))
+			{
+				<div class="movie-play-title" style="width: 95%; max-width: 1200px; margin: 12px 0 4px; font-size: 19px; font-weight: 700; color: var(--text, #fff);">
+					@ViewBag.MovieName
+				</div>
+			}
+
+			<div class="interaction-bar">
+				<form>
+					<input type="hidden" name="videoUrl" value="@ViewBag.VideoUrl" />
+					<input type="hidden" name="movieName" value="@ViewBag.MovieName" />
+					<input type="hidden" name="MovieID" value="@ViewBag.MovieID" />
+
+					<div class="publisher-info">
+						<input type="hidden" id="publisherId" value="@ViewBag.PublisherId" />
+						<div class="publisher-avatar">@publisherNameFirstLetter</div>
+						<div class="publisher-details">
+							<span class="publisher-name">@PublisherFirstName @PublisherLastName</span>
+							<span class="publisher-subscribers">1.2M abone</span>
+						</div>
+						@if (ViewBag.UserID != ViewBag.PublisherId)
+						{
+							<button type="button" class="btn-subscribe @(ViewBag.IsSubscribe == true ? "d-none" : "")" id="btnSubscribe" onclick="handleSubscribe(this)">
+								<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+								<span>Abone Ol</span>
+							</button>
+
+							<div class="subscription-group @(ViewBag.IsSubscribe == true ? "" : "d-none")" id="subscriptionGroup">
+								<button type="button" class="btn-subscribed" id="btnSubscribed" onclick="handleUnsubscribe(this)">
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+									<span>Abone olundu</span>
+								</button>
+
+								<div class="bell-container">
+									<button type="button" class="btn-bell-toggle active" id="btnBellToggle" onclick="toggleBellDropdown(event)" title="Bildirim Ayarları">
+										<span id="bellIconHolder">
+											<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+										</span>
+									</button>
+
+									<!-- YouTube Tarzı Açılır Bildirim Menüsü -->
+									<div class="bell-dropdown-menu" id="bellDropdownMenu">
+										<div class="bell-option selected" id="optBellAll" onclick="selectBellOption('all')">
+											<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+											<span>Tümü (Açık)</span>
+										</div>
+										<div class="bell-option" id="optBellNone" onclick="selectBellOption('none')">
+											<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+											<span>Hiçbiri (Sessiz)</span>
+										</div>
+									</div>
+								</div>
+							</div>
+						}
+					</div>
+				</form>
+				
+
+				<div class="action-buttons-wrapper">
+					<div class="interaction-group">
+						<input type="hidden" id="movieId" value="@ViewBag.MovieID" />
+
+						@{
+							bool isLiked = ViewBag.IsLiked != null && (bool)ViewBag.IsLiked;
+							bool isDisliked = ViewBag.IsDisliked != null && (bool)ViewBag.IsDisliked;
+							bool isSaved = ViewBag.IsSaved != null && (bool)ViewBag.IsSaved;
+						}
+
+						<button class="interaction-btn btn-like @(isLiked ? "active" : "")" onclick="handleLikeAction(this)">
+							<i class="bi @(isLiked ? "bi-hand-thumbs-up-fill" : "bi-hand-thumbs-up")"></i>
+							<span>@(ViewBag.LikeCount ?? 0)</span>
+						</button>
+
+						<button class="interaction-btn btn-dislike @(isDisliked ? "active" : "")" onclick="handleDislikeAction(this)">
+							<i class="bi @(isDisliked ? "bi-hand-thumbs-down-fill" : "bi-hand-thumbs-down")"></i>
+							<span>@(ViewBag.DislikeCount ?? 0)</span>
+						</button>
+					</div>
+
+					<div class="interaction-group">
+						<button class="interaction-btn btn-save @(isSaved ? "active" : "")" onclick="handleSavedVideoAction(this)">
+							<i class="bi @(isSaved ? "bi-bookmark-fill" : "bi-bookmark")"></i> <span>@(isSaved ? "Listeden Kaldır" : "Kaydet")</span>
+						</button>
+
+						<button class="interaction-btn btn-share" onclick="handleShare()">
+							<i class="bi bi-share"></i> <span>Paylaş</span>
+						</button>
+					</div>
+				</div>
+			</div>
+
+			<div class="comments-section">
+				<h3 class="comments-title"><i class="bi bi-chat-left-text"></i> Yorumlar</h3>
+
+				<div class="comment-input-area">
+					<img src="https://ui-avatars.com/api/?name=@ViewBag.VUserName&background=random" alt="User" class="user-avatar" />
+
+					<div class="input-wrapper">
+						<form onsubmit="submitMainComment(event, this)" style="width:100%">
+
+							<input type="hidden" name="videoUrl" value="@ViewBag.VideoUrl" />
+							<input type="hidden" name="movieName" value="@ViewBag.MovieName" />
+							<input type="hidden" name="MovieID" value="@ViewBag.MovieID" />
+
+							<textarea name="Content" placeholder="Herkese açık bir yorum ekle ...."
+								  rows="1" oninput="autoResize(this)"></textarea>
+							<div class="comment-actions">
+								<button type="button" class="btn-cancel" onclick="clearComment(this)">Geri</button>
+								<button type="submit" class="btn-submit">Yorum</button>
+							</div>
+						</form>
+					</div>
+				</div>
+
+				@await Component.InvokeAsync("_CommentsListComponent", new { MovieId = movieid })
+			</div>
+		}
+		else
+		{
+			<div class="no-video-msg">
+				<i class="bi bi-exclamation-circle"></i>
+				<h3>Video Source Not Found</h3>
+				<p>We couldn't load the video for this movie. Please try again later.</p>
+				<a href="javascript:history.back()" class="btn btn-primary mt-3" style="background-color: #45a29e; border-color: #45a29e; color: #fff;">Go Back</a>
+			</div>
+		}
+	</div>
+</div>
+<!-- Custom Unsubscribe Modal -->
+<div id="customUnsubscribeModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+  <div style="background-color: #1a1a26; color: #f0ede8; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 24px; width: 90%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center;">
+    <h3 style="margin-top: 0; color: #e8b84b; margin-bottom: 16px; font-size: 1.3rem;">
+      <i class="bi bi-exclamation-triangle-fill"></i> Abonelikten Çık
+    </h3>
+    <p style="margin-bottom: 24px; font-size: 1rem; color: #c5c6c7;">
+      Abonelikten çıkmak istediğinize emin misiniz?
+    </p>
+    <div style="display: flex; gap: 12px; justify-content: center;">
+      <button type="button" onclick="closeUnsubscribeModal()" style="background: transparent; color: #c5c6c7; border: 1px solid #6b6878; padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: 0.2s;">Hayır</button>
+      <button type="button" onclick="confirmUnsubscribe()" style="background: #c0392b; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: 0.2s;">Evet, Çık</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+
+<script>
+	let connection;
+
+	document.addEventListener("DOMContentLoaded", function () {
+		const movieIdValue = document.getElementById("movieId").value;
+
+		connection = new signalR.HubConnectionBuilder()
+			.withUrl("https://localhost:7021/signalrHub")
+			.configureLogging(signalR.LogLevel.Information)
+			.build();
+
+		connection.on("ReceiveMovieLikedCount", function(count) {
+			const likeButton = document.querySelector('.bi-hand-thumbs-up-fill, .bi-hand-thumbs-up').parentElement;
+			const countSpan = likeButton.querySelector('span');
+			countSpan.innerText = count;
+		});
+
+		connection.on("ReceiveMovieUnlikedCount", function(count) {
+			const dislikeButton = document.querySelector('.bi-hand-thumbs-down-fill, .bi-hand-thumbs-down').parentElement;
+		    const countSpan = dislikeButton.querySelector('span');
+		    countSpan.innerText = count;
+		});
+
+		connection.start().then(function() {
+			console.log("SignalR Bağlantısı Başarılı!");
+			
+			connection.invoke("JoinMovieGroup", movieIdValue).catch(err => console.error(err));
+		}).catch(function(err) {
+			console.error("SignalR Bağlantı Hatası: ", err.toString());
+		});
+
+		const player = document.getElementById('moviePlayer');
+		if (player) {
+			player.style.opacity = '0';
+			player.style.transition = 'opacity 1s ease-in-out';
+			
+			// Video metadata yüklendiğinde ve hazır olduğunda süreyi ayarla
+			player.addEventListener('loadedmetadata', function() {
+				const startSeconds = @(ViewBag.WatchedSeconds ?? 0);
+				if (startSeconds > 0 && startSeconds < player.duration) {
+					player.currentTime = startSeconds;
+				}
+			});
+
+			setTimeout(() => {
+				player.style.opacity = '1';
+			}, 100);
+
+			// Her 10 saniyede bir progress güncelle
+			const saveProgress = () => {
+				const historyId = '@ViewBag.HistoryId';
+				if (historyId && !isNaN(player.duration)) {
+					fetch('/Movie/UpdateProgress', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({
+							Id: historyId,
+							MovieID: movieIdValue,
+							TotalSeconds: Math.floor(player.duration) || 0,
+							WatchedSeconds: Math.floor(player.currentTime) || 0
+						})
+					});
+				}
+			};
+
+			setInterval(() => {
+				if (!player.paused && !player.ended) {
+					saveProgress();
+				}
+			}, 10000);
+
+			player.addEventListener('pause', saveProgress);
+			window.addEventListener('beforeunload', saveProgress);
+
+			// ---- OYNATMA AYARLARINI UYGULA ----
+			applyPlaybackSettings(player);
+		}
+
+		const loadingIndicator = document.getElementById("comments-loading-indicator");
+		if (loadingIndicator) {
+			let isFetching = false;
+
+			const observer = new IntersectionObserver(function (entries) {
+				if (entries[0].isIntersecting && !isFetching) {
+					const hasNext = loadingIndicator.getAttribute("data-has-next") === "true";
+					if (!hasNext) return;
+
+					let currentPage = parseInt(loadingIndicator.getAttribute("data-current-page"));
+					let nextPage = currentPage + 1;
+
+					isFetching = true;
+
+					fetch(`/Movie/LoadMoreComments?movieId=${movieIdValue}&pageIndex=${nextPage}`)
+						.then(response => {
+							if (!response.ok) throw new Error("Yorumlar yüklenirken hata oluştu");
+							return response.text();
+						})
+						.then(html => {
+							if (html.trim().length > 0) {
+								document.getElementById("comments-container").insertAdjacentHTML("beforeend", html);
+								loadingIndicator.setAttribute("data-current-page", nextPage);
+							} else {
+								loadingIndicator.setAttribute("data-has-next", "false");
+								loadingIndicator.style.display = "none";
+							}
+							isFetching = false;
+						})
+						.catch(error => {
+							console.error(error);
+							isFetching = false;
+						});
+				}
+			}, { root: null, rootMargin: "0px", threshold: 1.0 });
+
+			observer.observe(loadingIndicator);
+		}
+	});
+
+	function toggleActive(button) {
+		const group = button.parentElement;
+		const icon = button.querySelector('i');
+
+		if(group.classList.contains('interaction-group')) {
+			const siblings = group.querySelectorAll('.interaction-btn');
+
+			siblings.forEach(sib => {
+				if(sib !== button) {
+					sib.classList.remove('active');
+					const sibIcon = sib.querySelector('i');
+					if(sibIcon) {
+						if(sibIcon.classList.contains('bi-hand-thumbs-up-fill')) {
+							sibIcon.classList.replace('bi-hand-thumbs-up-fill', 'bi-hand-thumbs-up');
+						}
+						if(sibIcon.classList.contains('bi-hand-thumbs-down-fill')) {
+							sibIcon.classList.replace('bi-hand-thumbs-down-fill', 'bi-hand-thumbs-down');
+						}
+					}
+				}
+			});
+		}
+
+		button.classList.toggle('active');
+
+		if (button.classList.contains('active')) {
+			if (icon.classList.contains('bi-hand-thumbs-up')) icon.classList.replace('bi-hand-thumbs-up', 'bi-hand-thumbs-up-fill');
+			if (icon.classList.contains('bi-hand-thumbs-down')) icon.classList.replace('bi-hand-thumbs-down', 'bi-hand-thumbs-down-fill');
+		} else {
+			if (icon.classList.contains('bi-hand-thumbs-up-fill')) icon.classList.replace('bi-hand-thumbs-up-fill', 'bi-hand-thumbs-up');
+			if (icon.classList.contains('bi-hand-thumbs-down-fill')) icon.classList.replace('bi-hand-thumbs-down-fill', 'bi-hand-thumbs-down');
+		}
+	}
+
+	function toggleSave(button) {
+		button.classList.toggle('active');
+		const icon = button.querySelector('i');
+		const span = button.querySelector('span');
+
+		if (button.classList.contains('active')) {
+			icon.classList.remove('bi-bookmark');
+			icon.classList.add('bi-bookmark-check-fill');
+			span.innerText = "Saved";
+		} else {
+			icon.classList.remove('bi-bookmark-check-fill');
+			icon.classList.add('bi-bookmark');
+			span.innerText = "Save to Watchlist";
+		}
+	}
+
+	function autoResize(textarea) {
+		textarea.style.height = 'auto';
+		textarea.style.height = textarea.scrollHeight + 'px';
+	}
+
+	function clearComment(button) {
+		const textarea = button.closest('.input-wrapper').querySelector('textarea');
+		textarea.value = '';
+		textarea.style.height = 'auto';
+	}
+
+	function submitMainComment(event, form) {
+		event.preventDefault();
+
+		const contentBox = form.querySelector('textarea[name="Content"]');
+		const content = contentBox.value;
+		if (!content || content.trim() === '') return;
+
+		const movieId = form.querySelector('input[name="MovieID"]').value;
+		const videoUrl = form.querySelector('input[name="videoUrl"]').value;
+		const movieName = form.querySelector('input[name="movieName"]').value;
+
+		const formData = new URLSearchParams();
+		formData.append('Content', content);
+		formData.append('MovieID', movieId);
+		formData.append('videoUrl', videoUrl);
+		formData.append('movieName', movieName);
+
+		// Butonu yükleniyor yap
+		const submitBtn = form.querySelector('.btn-submit');
+		const originalText = submitBtn.innerHTML;
+		submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>...';
+		submitBtn.disabled = true;
+
+		fetch('/Movie/AddComment', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded'
+			},
+			body: formData.toString()
+		})
+		.then(response => response.json())
+		.then(data => {
+			submitBtn.innerHTML = originalText;
+			submitBtn.disabled = false;
+			
+			if (data.success) {
+				contentBox.value = '';
+				contentBox.style.height = 'auto';
+				
+				// Yorumlar divini bul ve içeriğini güncelle
+				const container = document.getElementById('comments-container');
+				if (container) {
+					fetch('/Movie/LoadMoreComments?movieId=' + movieId + '&pageIndex=0')
+					.then(res => res.text())
+					.then(html => {
+						container.innerHTML = html;
+						// Ek olarak sayfalama (yükleniyor) vs varsa sıfırlanabilir.
+						// Şu anlık en azından ilk sayfayı taze olarak bastık!
+					})
+					.catch(err => console.error("Yorum listesi güncellenemedi", err));
+				}
+			} else {
+				alert(data.message || 'Yorum eklenirken bir hata oluştu.');
+			}
+		})
+		.catch(error => {
+			console.error('Error submitting comment:', error);
+			submitBtn.innerHTML = originalText;
+			submitBtn.disabled = false;
+		});
+	}
+
+	function toggleReplyBox(commentId) {
+		const box = document.getElementById('reply-box-' + commentId);
+		if (box) {
+			box.classList.toggle('d-none');
+		}
+	}
+
+	function submitReply(commentId) {
+		const contentBox = document.getElementById('reply-content-' + commentId);
+		const content = contentBox.value;
+
+		if (!content || content.trim() === '') return;
+
+		const formData = new URLSearchParams();
+		formData.append('Content', content);
+		formData.append('CommentID', commentId);
+
+		fetch('/Movie/AddSubComment', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded'
+			},
+			body: formData.toString()
+		})
+		.then(response => response.json())
+		.then(data => {
+			if (data.success) {
+				// Yanıt kutusunu temizle ve gizle
+				contentBox.value = '';
+				toggleReplyBox(commentId);
+
+				// Alt yorumları yeniden yükle (varsa eski içeriği temizle ki tekrar çeksin)
+				const container = document.getElementById('subcomments-container-' + commentId);
+				if (container) container.innerHTML = '';
+
+				// "Yanıtları Gör" butonu yoksa oluştur
+				let btn = document.getElementById('btn-load-subcomments-' + commentId);
+				if (!btn) {
+					const wrapper = container.parentElement;
+					btn = document.createElement('button');
+					btn.type = 'button';
+					btn.id = 'btn-load-subcomments-' + commentId;
+					btn.style.cssText = 'background: transparent; border: none; color: #45a29e; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; padding: 0; margin-top: 12px; margin-bottom: 8px;';
+					btn.onclick = function() { loadSubComments(commentId); };
+					wrapper.insertBefore(btn, container);
+				}
+
+				// Alt yorumları yükle ve göster
+				loadSubComments(commentId);
+			} else {
+				alert(data.message || 'Alt yorum eklenirken bir hata oluştu.');
+			}
+		})
+		.catch(error => {
+			console.error('Error submitting reply:', error);
+		});
+	}
+
+    function loadSubComments(commentId) {
+        const container = document.getElementById('subcomments-container-' + commentId);
+        const btn = document.getElementById('btn-load-subcomments-' + commentId);
+
+        if (container.innerHTML.trim() !== '') {
+            // Zaten yüklendi, gizle/göster yapalım
+            if (container.style.display === 'none') {
+                container.style.display = 'block';
+                btn.innerHTML = '<i class="bi bi-chevron-up"></i> Yanıtları Gizle';
+            } else {
+                container.style.display = 'none';
+                btn.innerHTML = '<i class="bi bi-chevron-down"></i> Yanıtları Gör';
+            }
+            return;
+        }
+
+        // İlk kez yükleniyor
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Yükleniyor...';
+
+        fetch(`/Movie/GetSubComments?commentId=${commentId}`)
+            .then(response => response.text())
+            .then(html => {
+                if (html.trim() === '') {
+                    container.innerHTML = '<span style="color: #888; font-size: 0.85rem;">Henüz yanıt yok.</span>';
+                } else {
+                    container.innerHTML = html;
+                }
+                container.style.display = 'block';
+                btn.innerHTML = '<i class="bi bi-chevron-up"></i> Yanıtları Gizle';
+            })
+            .catch(error => {
+                console.error('Error loading subcomments:', error);
+                btn.innerHTML = '<i class="bi bi-chevron-down"></i> Yanıtları Gör';
+            });
+    }
+
+	function toggleCommentLike(button) {
+		button.classList.toggle('active');
+	}
+
+
+		function handleLikeAction(button) {
+		const group = button.parentElement;
+		const dislikeButton = Array.from(group.querySelectorAll('.interaction-btn')).find(b => b !== button);
+		const wasDisliked = dislikeButton && dislikeButton.classList.contains('active');
+
+		toggleActive(button);
+		const isNowLiked = button.classList.contains('active');
+
+		if (isNowLiked) {
+			if (wasDisliked) executeRemoveDislike(dislikeButton);
+			executeLike(button);
+		} else {
+			executeRemoveLike(button);
+		}
+	}
+
+	function executeLike(button) {
+		const movieIdValue = document.getElementById('movieId').value;
+		const veri = { movieID: movieIdValue };
+		const token = '@ViewBag.Token';
+		const apiUrl = 'https://localhost:7021/api/LikedMovie/AddLikedMovie';
+
+		fetch(apiUrl, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'Accept': '*/*',
+				'Authorization': `Bearer ${token}`
+			},
+			body: JSON.stringify(veri)
+		})
+		.then(response => {
+			if (!response.ok) throw new Error(`Ağ yanıtı başarısız oldu (Durum: ${response.status})`);
+			return response.text().then(text => text ? JSON.parse(text) : {});
+		})
+		.then(sonuc => {
+			console.log("Beğenme işlemi Başarılı!");
+			connection.invoke("SendCount", movieIdValue).catch(err => console.error(err.toString()));
+		})
+		.catch(hata => {
+			console.error('istek hatası detaylar:', hata);
+			if(button.classList.contains('active')) toggleActive(button);
+		});
+	}
+		function executeRemoveLike(button) {
+		const movieIdValue = document.getElementById('movieId').value;
+		const veri = { movieID: movieIdValue };
+		const token = '@ViewBag.Token';
+		const user_id = '@ViewBag.UserID';
+		const apiUrl = `https://localhost:7021/api/LikedMovie/UnlikeMovie/${movieIdValue}/${user_id}`;
+
+		fetch(apiUrl, {
+			method: 'DELETE', 
+			headers: {
+				'Content-Type': 'application/json',
+				'Accept': '*/*',
+				'Authorization': `Bearer ${token}`
+			},
+			body: JSON.stringify(veri)
+		})
+		.then(response => {
+			if (!response.ok) throw new Error(`Ağ yanıtı başarısız oldu (Durum: ${response.status})`);
+			return response.text().then(text => text ? JSON.parse(text) : {});
+		})
+		.then(sonuc => {
+			console.log("Be�eniyi Geri Alma işlemi Başarılı!");
+			connection.invoke("SendCount", movieIdValue).catch(err => console.error(err.toString()));
+		})
+		.catch(hata => {
+			console.error('istek hatası detaylar:', hata);
+			if(!button.classList.contains('active')) toggleActive(button);
+		});
+	}
+
+
+		function handleDislikeAction(button) {
+		const group = button.parentElement;
+		const likeButton = Array.from(group.querySelectorAll('.interaction-btn')).find(b => b !== button);
+		const wasLiked = likeButton && likeButton.classList.contains('active');
+
+		toggleActive(button);
+		const isNowDisliked = button.classList.contains('active');
+
+		if (isNowDisliked) {
+			if (wasLiked) executeRemoveLike(likeButton);
+			executeDislike(button);
+		} else {
+			executeRemoveDislike(button);
+		}
+	}
+
+		function executeDislike(button) {
+		const movieIdValue = document.getElementById('movieId').value;
+		const veri = { movieID: movieIdValue };
+		const token = '@ViewBag.Token';
+
+		const apiUrl = 'https://localhost:7021/api/Unliked/AddUnlikedMovie';
+
+		fetch(apiUrl, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'Accept': '*/*',
+				'Authorization': `Bearer ${token}`
+			},
+			body: JSON.stringify(veri)
+		})
+		.then(response => {
+			if (!response.ok) throw new Error(`Ağ yanıtı başarısız oldu (Durum: ${response.status})`);
+			return response.text().then(text => text ? JSON.parse(text) : {});
+		})
+		.then(sonuc => {
+			console.log("Beğenmeme işlemi Başarılı!");
+			connection.invoke("SendCount", movieIdValue).catch(err => console.error(err.toString()));
+		})
+		.catch(hata => {
+			console.error('istek hatası detayları:', hata);
+			if(button.classList.contains('active')) toggleActive(button);
+		});
+	}
+
+	function executeRemoveDislike(button) {
+		const movieIdValue = document.getElementById('movieId').value;
+		const veri = { movieID: movieIdValue };
+		const token = '@ViewBag.Token';
+		const user_id = '@ViewBag.UserID';
+		const apiUrl = `https://localhost:7021/api/Unliked/UnlikedMovie/${movieIdValue}/${user_id}`;
+
+		fetch(apiUrl, {
+			method: 'DELETE',
+			headers: {
+				'Content-Type': 'application/json',
+				'Accept': '*/*',
+				'Authorization': `Bearer ${token}`
+			},
+			body: JSON.stringify(veri)
+		})
+		.then(response => {
+			if (!response.ok) throw new Error(`Ağ yanıtı başarısız oldu (Durum: ${response.status})`);
+			return response.text().then(text => text ? JSON.parse(text) : {});
+		})
+		.then(sonuc => {
+			console.log("Beğenmemeyi Geri Alma işlemi Başarılı!");
+			connection.invoke("SendCount", movieIdValue).catch(err => console.error(err.toString()));
+		})
+		.catch(hata => {
+			console.error('istek hatası detaylar:', hata);
+			if(!button.classList.contains('active')) toggleActive(button);
+		});
+	}
+
+	
+	function handleSavedVideoAction(button) {
+		button.classList.toggle('active');
+		const icon = button.querySelector('i');
+		const span = button.querySelector('span');
+
+		if (button.classList.contains('active')) {
+			icon.classList.remove('bi-bookmark');
+			icon.classList.add('bi-bookmark-fill');
+			span.innerText = 'Listeden Kaldır';
+		} else {
+			icon.classList.remove('bi-bookmark-fill');
+			icon.classList.add('bi-bookmark');
+			span.innerText = 'Kaydet';
+		}
+
+		const isNowSaved = button.classList.contains('active');
+
+		if (isNowSaved) {
+			executeSavedVideo(button);
+		} else {
+			executeRemoveSavedVideo(button);
+		}
+	}
+	
+	
+	function executeSavedVideo(button) {
+		const movieIdValue = document.getElementById('movieId').value;
+		const veri = { movieID: movieIdValue };
+		const token = '@ViewBag.Token';
+		const apiUrl = 'https://localhost:7021/api/SavedMovie/AddSavedMovie';
+
+		fetch(apiUrl, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'Accept': '*/*',
+				'Authorization': `Bearer ${token}`
+			},
+			body: JSON.stringify(veri)
+		})
+		.then(response => {
+			if (!response.ok) throw new Error(`Ağ yanıtı başarısız oldu (Durum: ${response.status})`);
+			return response.text().then(text => text ? JSON.parse(text) : {});
+		})
+		.then(sonuc => {
+			console.log("Kaydetme işlemi Başarılı!");
+			connection.invoke("SendCount", movieIdValue).catch(err => console.error(err.toString()));
+		})
+		.catch(hata => {
+			console.error('istek hatası detaylar:', hata);
+			if(button.classList.contains('active')) toggleActive(button);
+		});
+	}
+
+		function executeRemoveSavedVideo(button) {
+		const movieIdValue = document.getElementById('movieId').value;
+		const veri = { movieID: movieIdValue };
+		const token = '@ViewBag.Token';
+		const user_id = '@ViewBag.UserID';
+		const apiUrl = `https://localhost:7021/api/SavedMovie/DeleteIdMovie/${movieIdValue}/${user_id}`;
+
+		fetch(apiUrl, {
+			method: 'DELETE',
+			headers: {
+				'Content-Type': 'application/json',
+				'Accept': '*/*',
+				'Authorization': `Bearer ${token}`
+			},
+			body: JSON.stringify(veri)
+		})
+		.then(response => {
+			if (!response.ok) throw new Error(`Ağ yanıtı başarısız oldu (Durum: ${response.status})`);
+			return response.text().then(text => text ? JSON.parse(text) : {});
+		})
+		.then(sonuc => {
+			console.log("Kaydetmeyi Geri Alma işlemi Başarılı!");
+			connection.invoke("SendCount", movieIdValue).catch(err => console.error(err.toString()));
+		})
+		.catch(hata => {
+			console.error('istek hatası detaylar:', hata);
+			if(!button.classList.contains('active')) toggleActive(button);
+		});
+	}
+
+		async function handleShare() {
+		const movieName = '@ViewBag.MovieName';
+		const shareUrl = window.location.href;
+
+		if (navigator.share) {
+			try {
+				await navigator.share({
+					title: movieName,
+					text: `${movieName} filmini izle!`,
+					url: shareUrl
+				});
+			} catch (err) {
+				console.log('Paylaşım iptal edildi');
+			}
+		} else {
+			navigator.clipboard.writeText(shareUrl);
+			alert('Link kopyalandı!');
+		}
+	}
+
+	// ---- OYNATMA AYARLARINI UYGULA (localStorage) ----
+	function applyPlaybackSettings(player) {
+		const quality  = localStorage.getItem('pref_quality')  ?? 'auto';
+		const autoplay = localStorage.getItem('pref_autoplay') ?? 'true';
+		const audio    = localStorage.getItem('pref_audio')    ?? 'en';
+		const subtitle = localStorage.getItem('pref_subtitle') ?? 'tr';
+
+		// 1. Oynatma Hızı / Kalite göstergesi (HTML5 video kaliteyi doğrudan desteklemez,
+		//    ama kullanıcıya bilgi verebiliriz)
+		const qualityLabels = { auto: 'Otomatik', '4k': '4K', '1080p': '1080p', '720p': '720p' };
+		console.log('[Ayarlar] Kalite tercihi:', qualityLabels[quality] ?? quality);
+
+		// 2. Autoplay ayarı — bölüm bitince tekrar oynat
+		if (autoplay === 'true') {
+			player.addEventListener('ended', function () {
+				// Sonraki bölüm linki varsa oraya git, yoksa sessiz kal
+				const nextBtn = document.querySelector('[data-next-episode]');
+				if (nextBtn) nextBtn.click();
+			});
+		}
+
+		// 3. Ses dili — video içinde birden fazla audio track varsa uygula
+		player.addEventListener('loadedmetadata', function () {
+			if (player.audioTracks && player.audioTracks.length > 1) {
+				for (let i = 0; i < player.audioTracks.length; i++) {
+					const track = player.audioTracks[i];
+					track.enabled = (track.language === audio);
+				}
+			}
+
+			// 4. Altyazı — video içinde text track varsa uygula
+			if (player.textTracks && player.textTracks.length > 0) {
+				for (let i = 0; i < player.textTracks.length; i++) {
+					const track = player.textTracks[i];
+					if (subtitle === 'off') {
+						track.mode = 'hidden';
+					} else {
+						track.mode = (track.language === subtitle) ? 'showing' : 'hidden';
+					}
+				}
+			}
+		});
+
+		// 5. Kullanıcıya mevcut tercihleri bildir (KALDIRILDI)
+		// showPlaybackInfoBadge(...)
+	}
+
+	function handleSubscribe(btn) {
+		const publisherId = document.getElementById("publisherId").value;
+		const movieId = document.getElementById("movieId").value;
+		
+		if (!publisherId) {
+			if (typeof showToast === "function") showToast("Yayıncı bilgisi bulunamadı.", "info");
+			return;
+		}
+
+		fetch('/Movie/Subscription', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({ 
+				ChannelId: parseInt(publisherId),
+				MovieID: movieId
+			})
+		})
+		.then(response => response.json())
+		.then(data => {
+			if (data.success) {
+				document.getElementById("btnSubscribe").classList.add("d-none");
+				const subGroup = document.getElementById("subscriptionGroup");
+				subGroup.classList.remove("d-none");
+
+				// Bell ringing micro-animation on subscribe
+				const bellBtn = document.getElementById("btnBellToggle");
+				if (bellBtn) {
+					bellBtn.classList.add("bell-ringing");
+					setTimeout(() => bellBtn.classList.remove("bell-ringing"), 700);
+				}
+
+				if (typeof showToast === "function") {
+					showToast("Kanala abone olundu! Tüm bildirimler açık 🔔", "success");
+				}
+			} else {
+				if (typeof showToast === "function") {
+					showToast(data.message || "Abonelik işlemi başarısız oldu.", "info");
+				} else {
+					alert(data.message || "Abonelik işlemi başarısız oldu.");
+				}
+			}
+		})
+		.catch(error => {
+			console.error('Error:', error);
+			if (typeof showToast === "function") showToast("Bir hata oluştu.", "info");
+		});
+	}
+
+	function toggleBellDropdown(e) {
+		e.stopPropagation();
+		const menu = document.getElementById("bellDropdownMenu");
+		if (menu) menu.classList.toggle("show");
+	}
+
+	function selectBellOption(opt) {
+		const menu = document.getElementById("bellDropdownMenu");
+		if (menu) menu.classList.remove("show");
+
+		const optAll = document.getElementById("optBellAll");
+		const optNone = document.getElementById("optBellNone");
+		const bellBtn = document.getElementById("btnBellToggle");
+		const iconHolder = document.getElementById("bellIconHolder");
+
+		if (opt === 'all') {
+			if (optAll) optAll.classList.add("selected");
+			if (optNone) optNone.classList.remove("selected");
+			if (bellBtn) {
+				bellBtn.classList.add("active");
+				bellBtn.classList.add("bell-ringing");
+				setTimeout(() => bellBtn.classList.remove("bell-ringing"), 600);
+			}
+			if (iconHolder) {
+				iconHolder.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>';
+			}
+			if (typeof showToast === "function") showToast("Bu kanal için tüm bildirimler açık 🔔", "success");
+		} else {
+			if (optAll) optAll.classList.remove("selected");
+			if (optNone) optNone.classList.add("selected");
+			if (bellBtn) bellBtn.classList.remove("active");
+			if (iconHolder) {
+				iconHolder.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
+			}
+			if (typeof showToast === "function") showToast("Bu kanal için bildirimler kapatıldı 🔕", "info");
+		}
+	}
+
+	window.addEventListener('click', function(e) {
+		const menu = document.getElementById("bellDropdownMenu");
+		if (menu && menu.classList.contains("show")) {
+			menu.classList.remove("show");
+		}
+	});
+
+	function handleUnsubscribe(btn) {
+		document.getElementById('customUnsubscribeModal').style.display = 'flex';
+	}
+
+	function closeUnsubscribeModal() {
+		document.getElementById('customUnsubscribeModal').style.display = 'none';
+	}
+
+	function confirmUnsubscribe() {
+		const publisherId = document.getElementById("publisherId").value;
+		
+		if (!publisherId) {
+			if (typeof showToast === "function") showToast("Yayıncı bilgisi bulunamadı.", "info");
+			return;
+		}
+
+		fetch('/Movie/Unsubscription', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: publisherId
+		})
+		.then(response => response.json())
+		.then(data => {
+			if (data.success) {
+				closeUnsubscribeModal();
+
+				document.getElementById("subscriptionGroup").classList.add("d-none");
+				document.getElementById("btnSubscribe").classList.remove("d-none");
+
+				if (typeof showToast === "function") {
+					showToast("Abonelikten çıkıldı.", "info");
+				}
+			} else {
+				if (typeof showToast === "function") {
+					showToast(data.message || "Abonelikten çıkma işlemi başarısız oldu.", "info");
+				} else {
+					alert(data.message || "Abonelikten çıkma işlemi başarısız oldu.");
+				}
+			}
+		})
+		.catch(error => {
+			console.error('Error:', error);
+			if (typeof showToast === "function") showToast("Bir hata oluştu.", "info");
+		});
+	}
+
+</script>

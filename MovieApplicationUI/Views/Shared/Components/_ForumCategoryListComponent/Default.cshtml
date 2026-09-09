@@ -1,0 +1,7 @@
+﻿
+@model PaginateList<ForumCategoryListDto>
+
+@foreach (var item in Model.Items)
+{
+	<option value="@item.EntityId">@item.Name</option>
+}

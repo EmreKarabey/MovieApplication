@@ -1,0 +1,14 @@
+﻿@model MovieApplicationUI.Paginate.PaginateList<MovieApplicationUI.Dto.Comment.CommentListDto>
+
+<div class="comments-list" id="comments-container">
+	@await Html.PartialAsync("/Views/Shared/Components/_CommentsListComponent/_CommentItems.cshtml", Model)
+</div>
+
+@if (Model.Items.Count > 0)
+{
+	<div id="comments-loading-indicator" class="text-center my-3" data-movie-id="@ViewBag.MovieId" data-current-page="0" data-has-next="true">
+		<div class="spinner-border text-primary" role="status">
+			<span class="visually-hidden">Yükleniyor...</span>
+		</div>
+	</div>
+}

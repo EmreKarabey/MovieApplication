@@ -1,0 +1,364 @@
+@model PaginateList<GetActiveForumListDto>
+
+@{
+	ViewData["Title"] = "Forum";
+
+	string GetCategoryColor(string categoryName)
+	{
+		if (string.IsNullOrEmpty(categoryName)) return "#f5b041";
+		var cat = categoryName.ToLowerInvariant();
+		
+		if (cat.Contains("haber") || cat.Contains("fragman")) return "#3498db"; 
+		if (cat.Contains("inceleme") || cat.Contains("elestiri")) return "#9b59b6"; 
+		if (cat.Contains("oneri") || cat.Contains("arayis")) return "#2ecc71"; 
+		if (cat.Contains("spoiler")) return "#e74c3c"; 
+		if (cat.Contains("yonetmen") || cat.Contains("oyuncu")) return "#e67e22"; 
+		if (cat.Contains("teori") || cat.Contains("analiz")) return "#1abc9c"; 
+		if (cat.Contains("liste")) return "#f1c40f"; 
+		if (cat.Contains("klasik") || cat.Contains("nostalji")) return "#7f8c8d"; 
+		if (cat.Contains("gise") || cat.Contains("rekor") || cat.Contains("odul")) return "#d35400"; 
+		if (cat.Contains("tartisma")) return "#e84393"; 
+		
+		return "#f5b041"; 
+	}
+}
+
+
+
+<style>
+	.forum-container {
+		padding: 20px;
+		color: #e4e4e6;
+		font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+	}
+
+	.forum-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 25px;
+		border-bottom: 1px solid #2a2a2a;
+		padding-bottom: 10px;
+	}
+
+		.forum-header h1 {
+			font-size: 24px;
+			color: #f5b041;
+			margin: 0;
+			font-weight: 600;
+		}
+
+	.forum-category-group {
+		background-color: #1a1a1a;
+		border-radius: 8px;
+		margin-bottom: 30px;
+		border: 1px solid #2a2a2a;
+		overflow: hidden;
+	}
+
+	.forum-topic-item {
+		display: flex;
+		padding: 15px 20px;
+		border-bottom: 1px solid #2a2a2a;
+		align-items: center;
+		transition: background-color 0.2s;
+		cursor: pointer;
+		text-decoration: none;
+	}
+
+		.forum-topic-item:hover {
+			background-color: #202020;
+		}
+
+		.forum-topic-item:last-child {
+			border-bottom: none;
+		}
+
+	.topic-avatar {
+		width: 45px;
+		height: 45px;
+		background-color: #f5b041;
+		color: #1a1a1a;
+		border-radius: 50%;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		font-size: 20px;
+		font-weight: bold;
+		margin-right: 15px;
+		flex-shrink: 0;
+	}
+
+	.topic-info {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+	}
+
+	.topic-title {
+		color: #ddd;
+		font-size: 16px;
+		font-weight: 500;
+		margin: 0 0 5px 0;
+		transition: color 0.2s;
+	}
+
+	.forum-topic-item:hover .topic-title {
+		color: var(--cat-color, #f5b041);
+	}
+
+	.topic-meta {
+		font-size: 13px;
+		color: #888;
+	}
+
+	.topic-author {
+		color: #f5b041;
+		font-weight: 500;
+	}
+
+	.topic-date {
+		color: #777;
+		margin-left: 8px;
+	}
+
+	.topic-category-badge {
+		margin-left: auto;
+		background-color: #242424;
+		color: #aaa;
+		padding: 6px 12px;
+		border-radius: 4px;
+		font-size: 12px;
+		font-weight: 500;
+		border: 1px solid #333;
+		transition: border-color 0.2s, color 0.2s;
+	}
+
+	.forum-topic-item:hover .topic-category-badge {
+		border-color: var(--cat-color, #f5b041);
+		color: var(--cat-color, #f5b041);
+	}
+
+	/* Responsive */
+	@@media (max-width: 768px) {
+		.forum-container {
+			padding: 14px 10px;
+		}
+
+		.forum-header {
+			margin-bottom: 16px;
+			padding-bottom: 8px;
+		}
+
+		.forum-header h1 {
+			font-size: 20px;
+		}
+
+		.forum-header a {
+			padding: 6px 12px !important;
+			font-size: 13px;
+		}
+
+		.forum-topic-item {
+			padding: 12px 10px;
+			gap: 10px;
+			align-items: flex-start;
+		}
+
+		.topic-avatar {
+			width: 36px;
+			height: 36px;
+			font-size: 16px;
+			margin-right: 0;
+		}
+
+		.topic-title {
+			font-size: 14px;
+			margin-bottom: 4px;
+		}
+
+		.topic-meta {
+			font-size: 11px;
+		}
+
+		.topic-category-badge {
+			margin-left: 0;
+			margin-top: 6px;
+			font-size: 10px;
+			padding: 2px 8px;
+			display: inline-block;
+		}
+	}
+</style>
+
+<div class="topbar">
+	<div class="search-wrap">
+		<span class="search-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+		<input class="search-input" placeholder="Forumda ara..." />
+	</div>
+	<div class="topbar-actions">
+		<a href="/Forum/Add" class="btn-ghost" style="background-color: var(--accent, #f5b041); color: #111; padding: 8px 16px; border-radius: 8px; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(245, 176, 65, 0.3);">
+			<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Yeni Konu
+		</a>
+		<div class="icon-btn" id="notifBell">
+			<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+			<div class="notif-dot" style="display:none;"></div>
+		</div>
+		<div class="icon-btn dark-mode-btn" id="darkModeBtn" onclick="toggleDarkMode()" title="Karanlık/Aydınlık mod">
+			<span class="dm-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg></span>
+		</div>
+	</div>
+</div>
+
+<div class="forum-container">
+	<div class="forum-header">
+		<h1>Film Forumu</h1>
+	</div>
+
+	<div class="forum-category-group">
+		@foreach (var item in Model.Items)
+		{
+				var categoryColor = GetCategoryColor(item.ForumCategoryName);
+				var timeDiff = DateTime.UtcNow - item.CreatedAt;
+				string timeAgoText;
+
+				if (timeDiff.TotalMinutes < 1)
+				{
+					timeAgoText = "Şimdi";
+				}
+				else if (timeDiff.TotalMinutes < 60)
+				{
+					timeAgoText = $"{(int)timeDiff.TotalMinutes} dakika önce";
+				}
+				else if (timeDiff.TotalHours < 24)
+				{
+					timeAgoText = $"{(int)timeDiff.TotalHours} saat önce";
+				}
+
+				else if (timeDiff.TotalDays < 7)
+				{
+					timeAgoText = $"{(int)timeDiff.TotalDays} gün önce";
+				}
+				else
+				{
+					timeAgoText = item.CreatedAt.ToString("dd MMMM yyyy");
+				}
+
+			<a href="/Forum/Detail/@item.EntityID" class="forum-topic-item" style="--cat-color: @categoryColor;">
+				<div class="topic-avatar" style="background-color: @categoryColor; color: #fff;">@item.UserName.Substring(0,1).ToUpper()</div>
+				<div class="topic-info">
+					<h3 class="topic-title">@item.Title</h3>
+					<div class="topic-meta">
+						<span class="topic-author">@item.UserName</span>
+						<span class="topic-date">@timeAgoText</span>
+					</div>
+				</div>
+				<div class="topic-category-badge">@item.ForumCategoryName</div>
+			</a>
+		}
+
+
+	</div>
+</div>
+
+<script>
+    let pageIndex = 0;
+    let isFetching = false;
+    let hasMorePages = true;
+
+    function getCategoryColor(categoryName) {
+        if (!categoryName) return "#f5b041";
+        const cat = categoryName.toLowerCase();
+        
+        if (cat.includes("haber") || cat.includes("fragman")) return "#3498db"; 
+        if (cat.includes("inceleme") || cat.includes("elestiri")) return "#9b59b6"; 
+        if (cat.includes("oneri") || cat.includes("arayis")) return "#2ecc71"; 
+        if (cat.includes("spoiler")) return "#e74c3c"; 
+        if (cat.includes("yonetmen") || cat.includes("oyuncu")) return "#e67e22"; 
+        if (cat.includes("teori") || cat.includes("analiz")) return "#1abc9c"; 
+        if (cat.includes("liste")) return "#f1c40f"; 
+        if (cat.includes("klasik") || cat.includes("nostalji")) return "#7f8c8d"; 
+        if (cat.includes("gise") || cat.includes("rekor") || cat.includes("odul")) return "#d35400"; 
+        if (cat.includes("tartisma")) return "#e84393"; 
+        
+        return "#f5b041"; 
+    }
+
+    function getTimeAgo(dateString) {
+        const d = new Date(dateString);
+        const now = new Date();
+        const diffInMinutes = Math.floor((now.getTime() - d.getTime()) / 60000);
+        
+        if (diffInMinutes < 1) return "Şimdi";
+        if (diffInMinutes < 60) return diffInMinutes + " dakika önce";
+        
+        const diffInHours = Math.floor(diffInMinutes / 60);
+        if (diffInHours < 24) return diffInHours + " saat önce";
+        
+        const diffInDays = Math.floor(diffInHours / 24);
+        if (diffInDays < 7) return diffInDays + " gün önce";
+        
+        const options = { day: 'numeric', month: 'long', year: 'numeric' };
+        return d.toLocaleDateString('tr-TR', options);
+    }
+
+    window.addEventListener("scroll", () => {
+        // Kullanıcı sayfanın sonuna yaklaştığında (300px kala) tetikle
+        if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 300) {
+            loadMore();
+        }
+    });
+
+    async function loadMore() {
+        if (isFetching || !hasMorePages) return;
+        isFetching = true;
+        pageIndex++;
+
+        try {
+            const response = await fetch(`/Forum/GetMoreForums?pageIndex=${pageIndex}`);
+            if (response.ok) {
+                const data = await response.json();
+                
+                if (data.items && data.items.length > 0) {
+                    const container = document.querySelector(".forum-category-group");
+                    
+                    data.items.forEach(item => {
+                        const catColor = getCategoryColor(item.forumCategoryName);
+                        const initial = item.userName ? item.userName.charAt(0).toUpperCase() : "U";
+                        const timeAgo = getTimeAgo(item.createdAt);
+
+                        const html = `
+                            <a href="/Forum/Detail" class="forum-topic-item" style="--cat-color: ${catColor};">
+                                <div class="topic-avatar" style="background-color: ${catColor}; color: #fff;">${initial}</div>
+                                <div class="topic-info">
+                                    <h3 class="topic-title">${item.title}</h3>
+                                    <div class="topic-meta">
+                                        <span class="topic-author">${item.userName}</span>
+                                        <span class="topic-date">${timeAgo}</span>
+                                    </div>
+                                </div>
+                                <div class="topic-category-badge">${item.forumCategoryName}</div>
+                            </a>
+                        `;
+                        container.insertAdjacentHTML("beforeend", html);
+                    });
+
+                    if (data.hasNext !== undefined) {
+                         hasMorePages = data.hasNext;
+                    } else if (data.items.length < 10) {
+                         hasMorePages = false;
+                    }
+                } else {
+                    hasMorePages = false;
+                }
+            } else if (response.status === 401) {
+                window.location.href = "/Login/Index";
+            }
+        } catch (error) {
+            console.error("Forums error:", error);
+        } finally {
+            isFetching = false;
+        }
+    }
+</script>
