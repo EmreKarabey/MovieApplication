@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="CorePersistence">
+      <HintPath>..\..\CorePackages\CorePersistence\bin\Debug\net9.0\CorePersistence.dll</HintPath>
+    </Reference>
+    <Reference Include="CoreSecurity">
+      <HintPath>..\..\CorePackages\CoreSecurity\bin\Debug\net9.0\CoreSecurity.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

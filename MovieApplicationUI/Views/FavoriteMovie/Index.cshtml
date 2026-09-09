@@ -1,0 +1,375 @@
+@model PaginateList<FavoriteMovieListDto>
+@{
+	ViewData["Title"] = "Index";
+	Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+	.page-header {
+		padding: 32px 32px 0;
+	}
+
+	.page-title {
+		font-family: 'DM Serif Display', serif;
+		font-size: 32px;
+		margin-bottom: 6px;
+	}
+
+		.page-title span {
+			color: var(--accent);
+		}
+
+	.page-sub {
+		font-size: 13px;
+		color: var(--muted);
+		margin-bottom: 0;
+	}
+
+	.controls {
+		padding: 20px 32px 0;
+	}
+
+	.empty {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		padding: 80px 20px;
+		text-align: center;
+		gap: 12px;
+	}
+
+	.empty-icon {
+		font-size: 48px;
+		opacity: 0.3;
+	}
+
+	.empty-title {
+		font-family: 'DM Serif Display', serif;
+		font-size: 22px;
+	}
+
+	.empty-desc {
+		font-size: 13px;
+		color: var(--muted);
+	}
+
+	/* Arama durumu badge */
+	.search-status {
+		display: none;
+		align-items: center;
+		gap: 8px;
+		padding: 8px 16px;
+		background: rgba(232,184,75,0.1);
+		border: 1px solid rgba(232,184,75,0.25);
+		border-radius: 8px;
+		font-size: 12px;
+		color: var(--accent);
+		margin: 0 32px 0;
+		width: fit-content;
+	}
+
+	.search-status.visible {
+		display: flex;
+	}
+
+	.search-status-clear {
+		background: none;
+		border: none;
+		color: var(--muted);
+		cursor: pointer;
+		font-size: 14px;
+		padding: 0 2px;
+		transition: color 0.2s;
+	}
+
+	.search-status-clear:hover {
+		color: var(--accent2);
+	}
+
+	/* Search input yükleniyor animasyonu */
+	.search-wrap.loading .search-icon::after {
+		content: '';
+		position: absolute;
+		left: 10px;
+		top: 50%;
+		transform: translateY(-50%);
+		width: 14px;
+		height: 14px;
+		border: 2px solid var(--accent);
+		border-top-color: transparent;
+		border-radius: 50%;
+		animation: spin 0.6s linear infinite;
+	}
+
+	@@keyframes spin {
+		to { transform: translateY(-50%) rotate(360deg); }
+	}
+
+	@@media (max-width: 768px) {
+		.page-header {
+			padding: 20px 16px 0;
+		}
+
+		.page-title {
+			font-size: 24px;
+		}
+
+		.search-status {
+			margin: 0 16px 10px;
+		}
+
+		.controls {
+			padding: 14px 16px 0;
+		}
+	}
+</style>
+
+<div class="topbar">
+	<div class="search-wrap" id="favSearchWrap">
+		<span class="search-icon">🔍</span>
+		<input class="search-input" id="favSearchInput" placeholder="Favorilerde ara..." autocomplete="off">
+	</div>
+	<div class="topbar-actions">
+		<div class="icon-btn" id="notifBell">🔔<div class="notif-dot" style="display:none;"></div></div>
+		<div class="icon-btn dark-mode-btn" id="darkModeBtn" onclick="toggleDarkMode()" title="Karanlık/Aydınlık mod">
+			<span class="dm-icon">🌙</span>
+		</div>
+	</div>
+</div>
+
+<div class="page-header">
+	<div class="page-title">Favorilediğin <span>Filmler</span></div>
+	<div class="page-sub" id="favSubTitle">@Model.Items.Count() film favorilendi</div>
+</div>
+
+<!-- Arama modu bilgi bandı -->
+<div class="search-status" id="searchStatus">
+	<span>🔎</span>
+	<span id="searchStatusText"></span>
+	<button class="search-status-clear" onclick="clearFavSearch()" title="Aramayı temizle">✕</button>
+</div>
+
+<div class="content">
+	@await Component.InvokeAsync("_FavoriteCategoryListComponent")
+	<div id="favMovieContainer">
+		@await Component.InvokeAsync("_FavoriteCategoryFilteringComponent", new { CategoryName = ViewBag.FCategoryName })
+	</div>
+
+	<div id="loadingIndicator" style="display:none; text-align:center; padding: 20px; color: #fff;">
+		<span style="font-size: 24px;">⏳</span> Yükleniyor...
+	</div>
+</div>
+
+<script>
+	let userid = `@ViewBag.UserId`;
+	let currentPage = 0;
+	let isLoading = false;
+	let hasMore = true;
+	let categoryName = '@Html.Raw(ViewBag.FCategoryName ?? "")';
+
+	// ── ARAMA DEĞİŞKENLERİ ──
+	let searchMode = false;
+	let searchQuery = '';
+	let searchPage = 0;
+	let searchHasMore = true;
+	let searchDebounceTimer = null;
+
+	// ── ARAMA INPUT ──
+	const favSearchInput = document.getElementById('favSearchInput');
+	const searchStatus = document.getElementById('searchStatus');
+	const searchStatusText = document.getElementById('searchStatusText');
+	const favSubTitle = document.getElementById('favSubTitle');
+	const favMovieContainer = document.getElementById('favMovieContainer');
+
+	favSearchInput.addEventListener('input', function () {
+		const query = this.value.trim();
+
+		clearTimeout(searchDebounceTimer);
+
+		if (!query) {
+			clearFavSearch();
+			return;
+		}
+
+		searchDebounceTimer = setTimeout(() => {
+			startFavSearch(query);
+		}, 400);
+	});
+
+	async function startFavSearch(query) {
+		searchQuery = query;
+		searchPage = 0;
+		searchHasMore = true;
+		searchMode = true;
+
+		favMovieContainer.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-size:13px;">⏳ Aranıyor...</div>';
+
+		searchStatus.classList.add('visible');
+		searchStatusText.textContent = `"${query}" için sonuçlar`;
+
+		await loadSearchResults(true);
+	}
+
+	async function loadSearchResults(replace = false) {
+		if (isLoading || !searchHasMore) return;
+		isLoading = true;
+
+		const loadingEl = document.getElementById('loadingIndicator');
+		if (loadingEl) loadingEl.style.display = 'block';
+
+		try {
+			const url = `/FavoriteMovie/Search?s=${encodeURIComponent(searchQuery)}&pageIndex=${searchPage}`;
+			const response = await fetch(url);
+			if (!response.ok) throw new Error('Arama başarısız');
+
+			const html = await response.text();
+			const parser = new DOMParser();
+			const doc = parser.parseFromString(html, 'text/html');
+			const newCards = doc.querySelectorAll('.movie-grid > .movie-card');
+
+			if (newCards.length === 0 || newCards.length < 10) {
+				searchHasMore = false;
+			}
+
+			if (replace) {
+				// İlk arama — container'ı sıfırla
+				if (newCards.length === 0) {
+					favMovieContainer.innerHTML = `
+						<div class="empty">
+							<div class="empty-icon">🔍</div>
+							<div class="empty-title">Sonuç bulunamadı</div>
+							<div class="empty-desc">"${searchQuery}" için favorilerinizde film yok.</div>
+						</div>`;
+					favSubTitle.textContent = '0 sonuç bulundu';
+					return;
+				}
+
+				// movie-grid içeren kısmı al veya yeni oluştur
+				const gridHtml = doc.querySelector('.movie-grid');
+				if (gridHtml) {
+					favMovieContainer.innerHTML = `<div class="movie-grid" id="searchGrid"></div>`;
+				} else {
+					favMovieContainer.innerHTML = '<div class="movie-grid" id="searchGrid"></div>';
+				}
+			}
+
+			let grid = favMovieContainer.querySelector('.movie-grid');
+			if (!grid) {
+				grid = document.createElement('div');
+				grid.className = 'movie-grid';
+				grid.id = 'searchGrid';
+				favMovieContainer.appendChild(grid);
+			}
+
+			newCards.forEach(card => {
+				grid.appendChild(card);
+				const favBtn = card.querySelector('.favorite-btn');
+				if (favBtn && favBtn.dataset.movieId) checkIfFavorite(favBtn.dataset.movieId);
+				const saveBtn = card.querySelector('.save-btn');
+				if (saveBtn && saveBtn.dataset.movieId) checkIfSaved(saveBtn.dataset.movieId);
+			});
+
+			searchPage++;
+
+			// Alt başlığı güncelle
+			const total = favMovieContainer.querySelectorAll('.movie-card').length;
+			favSubTitle.textContent = `${total}+ sonuç "${searchQuery}" için`;
+
+		} catch (err) {
+			console.error('Arama hatası:', err);
+			showToast('Arama sırasında hata oluştu.', 'info');
+		} finally {
+			isLoading = false;
+			const loadingEl = document.getElementById('loadingIndicator');
+			if (loadingEl) loadingEl.style.display = 'none';
+		}
+	}
+
+	function clearFavSearch() {
+		searchMode = false;
+		searchQuery = '';
+		searchPage = 0;
+		searchHasMore = true;
+		favSearchInput.value = '';
+		searchStatus.classList.remove('visible');
+		favSubTitle.textContent = '@Model.Items.Count() film favorilendi';
+
+		// Orijinal listeyi geri yükle
+		favMovieContainer.innerHTML = '';
+		fetch(`/FavoriteMovie/FLoadMoreMovies?categoryName=&pageIndex=0&UserId=${userid}`)
+			.then(r => r.text())
+			.then(html => {
+				favMovieContainer.innerHTML = html;
+				favMovieContainer.querySelectorAll('.movie-card').forEach(card => {
+					const favBtn = card.querySelector('.favorite-btn');
+					if (favBtn && favBtn.dataset.movieId) checkIfFavorite(favBtn.dataset.movieId);
+					const saveBtn = card.querySelector('.save-btn');
+					if (saveBtn && saveBtn.dataset.movieId) checkIfSaved(saveBtn.dataset.movieId);
+				});
+			})
+			.catch(err => console.error('Liste yüklenemedi:', err));
+	}
+
+	// ── SCROLL: arama modundaysa searchPage++, değilse currentPage++ ──
+	let scrollTimeout;
+	window.addEventListener('scroll', () => {
+		if (scrollTimeout) return;
+		scrollTimeout = setTimeout(() => {
+			if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 150) {
+				if (!isLoading) {
+					if (searchMode && searchHasMore) {
+						loadSearchResults(false);
+					} else if (!searchMode && hasMore) {
+						loadMore();
+					}
+				}
+			}
+			scrollTimeout = null;
+		}, 100);
+	});
+
+	window.getMoviesUrl = function(cat, page) {
+		const catParam = encodeURIComponent(cat || '');
+		return `/FavoriteMovie/FLoadMoreMovies?categoryName=${catParam}&pageIndex=${page}&UserId=${userid}`;
+	};
+
+	async function loadMore() {
+		isLoading = true;
+		document.getElementById('loadingIndicator').style.display = 'block';
+		currentPage++;
+
+		try {
+			const response = await fetch(window.getMoviesUrl(categoryName, currentPage));
+			if (!response.ok) throw new Error('API hatası');
+
+			const html = await response.text();
+			const parser = new DOMParser();
+			const doc = parser.parseFromString(html, 'text/html');
+
+			const newCards = doc.querySelectorAll('.movie-grid > .movie-card');
+
+			if (newCards.length === 0 || newCards.length < 10) {
+				hasMore = false;
+			}
+
+			if (newCards.length > 0) {
+				const container = document.querySelector('.movie-grid');
+				if(container) {
+					newCards.forEach(card => {
+						container.appendChild(card);
+						const favBtn = card.querySelector('.favorite-btn');
+						if(favBtn && favBtn.dataset.movieId) checkIfFavorite(favBtn.dataset.movieId);
+						const saveBtn = card.querySelector('.save-btn');
+						if(saveBtn && saveBtn.dataset.movieId) checkIfSaved(saveBtn.dataset.movieId);
+					});
+				}
+			}
+		} catch (err) {
+			console.error('Filmler yüklenirken hata: ', err);
+		} finally {
+			isLoading = false;
+			document.getElementById('loadingIndicator').style.display = 'none';
+		}
+	}
+</script>

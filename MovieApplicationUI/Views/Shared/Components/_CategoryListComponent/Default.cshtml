@@ -1,0 +1,18 @@
+﻿@model List<CategoryListDto>
+
+<div class="cat-tabs">
+
+	<button class="cat-tab @(ViewBag.CategoryName == null ? "active" : "")"
+			onclick="setTab(this)">
+		Tümü
+	</button>
+
+	@foreach (var item in Model)
+	{
+		<button class="cat-tab @(ViewBag.CategoryName == item.CategoryName ? "active" : "")"
+				onclick="setTab(this)">
+			@item.CategoryName
+		</button>
+	}
+
+</div>

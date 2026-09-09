@@ -1,0 +1,407 @@
+@{
+    ViewData["Title"] = "Profilim";
+    Layout = "_Layout";
+
+    var fullName = ViewBag.Name as string ?? "Kullanıcı Adı";
+    var nameParts = fullName.Split(' ');
+    var firstName = nameParts.Length > 0 ? nameParts[0] : "";
+    var lastName = nameParts.Length > 1 ? string.Join(" ", nameParts.Skip(1)) : "";
+}
+
+<style>
+    .profile-container {
+        padding: 40px;
+        max-width: 100%;
+        margin: 0;
+        color: var(--text);
+    }
+
+    .profile-header {
+        display: flex;
+        align-items: center;
+        gap: 30px;
+        background: var(--surface2);
+        padding: 40px;
+        border-radius: 20px;
+        margin-bottom: 40px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .profile-header-bg {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: linear-gradient(135deg, rgba(232, 184, 75, 0.1), transparent);
+        z-index: 0;
+    }
+
+    .profile-avatar-wrapper {
+        position: relative;
+        z-index: 1;
+    }
+
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent), #b38600);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 48px;
+        font-weight: 700;
+        color: #111;
+        box-shadow: 0 10px 30px rgba(232, 184, 75, 0.3);
+    }
+
+    .profile-info {
+        z-index: 1;
+        flex: 1;
+    }
+
+    .profile-name {
+        font-size: 32px;
+        font-weight: 800;
+        margin-bottom: 8px;
+        font-family: 'Outfit', sans-serif;
+    }
+
+    .profile-email {
+        font-size: 16px;
+        color: var(--muted);
+        margin-bottom: 16px;
+    }
+
+    .profile-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        background: rgba(232, 184, 75, 0.15);
+        color: var(--accent);
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+        border: 1px solid rgba(232, 184, 75, 0.3);
+    }
+
+    .profile-stats {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 40px;
+    }
+
+    .stat-card {
+        flex: 1;
+        background: var(--surface2);
+        padding: 24px;
+        border-radius: 16px;
+        text-align: center;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .stat-value {
+        font-size: 36px;
+        font-weight: 800;
+        color: var(--accent);
+        margin-bottom: 8px;
+        font-family: 'Outfit', sans-serif;
+    }
+
+    .stat-label {
+        font-size: 14px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .profile-sections {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 30px;
+    }
+
+    .profile-section {
+        background: var(--surface2);
+        padding: 30px;
+        border-radius: 16px;
+    }
+
+    .section-title {
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 16px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 13px;
+        color: var(--muted);
+        margin-bottom: 8px;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 14px 16px;
+        background: var(--surface1);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        color: var(--text);
+        font-size: 15px;
+        font-family: 'DM Sans', sans-serif;
+        transition: border-color 0.2s;
+    }
+
+    .form-input:focus {
+        border-color: var(--accent);
+        outline: none;
+    }
+
+    .btn-save {
+        background: var(--accent);
+        color: #111;
+        border: none;
+        padding: 14px 30px;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        width: 100%;
+    }
+
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(232, 184, 75, 0.3);
+    }
+
+    .recent-activity-list {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .activity-item {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 12px;
+        background: var(--surface1);
+        border-radius: 12px;
+    }
+
+    .activity-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: rgba(232, 184, 75, 0.1);
+        color: var(--accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+    }
+
+    .activity-details {
+        flex: 1;
+    }
+
+    .activity-title {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+
+    .activity-time {
+        font-size: 12px;
+        color: var(--muted);
+    }
+
+    @@media (max-width: 768px) {
+        .profile-container {
+            padding: 16px 12px;
+        }
+
+        .profile-header {
+            flex-direction: column;
+            text-align: center;
+            padding: 24px 16px;
+            gap: 16px;
+            border-radius: 14px;
+            margin-bottom: 20px;
+        }
+
+        .profile-avatar {
+            width: 84px;
+            height: 84px;
+            font-size: 34px;
+        }
+
+        .profile-name {
+            font-size: 22px;
+            margin-bottom: 4px;
+        }
+
+        .profile-email {
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .profile-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            padding: 16px 12px;
+            border-radius: 12px;
+        }
+
+        .stat-value {
+            font-size: 26px;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 11px;
+        }
+
+        .profile-sections {
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+
+        .profile-section {
+            padding: 20px 16px;
+            border-radius: 12px;
+        }
+
+        .section-title {
+            font-size: 17px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+        }
+    }
+</style>
+
+<div class="topbar">
+    <div style="font-size: 16px; font-weight: 700; color: var(--text);">Profilim</div>
+    <div class="topbar-actions" style="margin-left: auto;">
+        <div class="icon-btn" id="notifBell">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            <div class="notif-dot" style="display:none;"></div>
+        </div>
+        <div class="icon-btn dark-mode-btn" id="darkModeBtn" onclick="toggleDarkMode()" title="Karanlık/Aydınlık mod">
+            <span class="dm-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg></span>
+        </div>
+    </div>
+</div>
+
+<div class="profile-container">
+    
+    <div class="profile-header">
+        <div class="profile-header-bg"></div>
+        <div class="profile-avatar-wrapper">
+            <div class="profile-avatar">@(ViewBag.Name?.ToString()?.Substring(0, 1) ?? "K")</div>
+        </div>
+        <div class="profile-info">
+            <div class="profile-name">@(ViewBag.Name ?? "Kullanıcı Adı")</div>
+            <div class="profile-email">@(ViewBag.Email ?? "kullanici@cinevault.com")</div>
+        </div>
+    </div>
+
+    @await Component.InvokeAsync("_MyStaticsComponent")
+  
+
+    <div class="profile-sections">
+        <!-- Sol: Hesap Bilgileri Formu -->
+        <div class="profile-section">
+            <div class="section-title" style="margin-bottom: 5px;">
+                <span>👤</span> Hesap Bilgileri
+            </div>
+            <p style="color: var(--muted); font-size: 13px; margin-bottom: 24px;">Ad ve soyad bilgilerinizi aşağıdan güncelleyebilirsiniz.</p>
+            <form id="profileUpdateForm" enctype="multipart/form-data">
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label class="form-label">Ad</label>
+                    <input type="text" id="FirstName" name="FirstName" class="form-input" value="@firstName" />
+                </div>
+                <div class="form-group" style="margin-bottom: 24px;">
+                    <label class="form-label">Soyad</label>
+                    <input type="text" id="LastName" name="LastName" class="form-input" value="@lastName" />
+                </div>
+                <button type="submit" class="btn-save" id="btnSaveProfile">Değişiklikleri Kaydet</button>
+            </form>
+        </div>
+
+
+        @await Component.InvokeAsync("_LastActivitiesComponent")
+    </div>
+
+</div>
+
+<script>
+    document.getElementById('profileUpdateForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        var btn = document.getElementById('btnSaveProfile');
+        var originalText = btn.innerText;
+        btn.innerText = 'Kaydediliyor...';
+        btn.disabled = true;
+
+        var params = new URLSearchParams();
+        params.append('FirstName', document.getElementById('FirstName').value);
+        params.append('LastName', document.getElementById('LastName').value);
+
+        fetch('/Profile/Index', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: params.toString()
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (typeof showToast === 'function') {
+                    showToast('Bilgiler başarıyla güncellendi!', 'success');
+                } else {
+                    alert('Bilgiler başarıyla güncellendi!');
+                }
+            } else {
+                if (typeof showToast === 'function') {
+                    showToast(data.message || 'Güncellenirken bir sorun çıktı.', 'error');
+                } else {
+                    alert(data.message || 'Güncellenirken bir sorun çıktı.');
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Hata:', error);
+            if (typeof showToast === 'function') {
+                showToast('Güncellenirken bir sorun çıktı.', 'error');
+            } else {
+                alert('Güncellenirken bir sorun çıktı.');
+            }
+        })
+        .finally(() => {
+            btn.innerText = originalText;
+            btn.disabled = false;
+        });
+    });
+</script>

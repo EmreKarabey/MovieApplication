@@ -1,0 +1,44 @@
+@model PaginateList<HistoryListDto>
+
+
+@foreach (var item in Model.Items)
+{
+	<div class="history-card" onclick="openMovieDetails('@item.MovieId')">
+		<div class="history-card-img-wrap">
+			<img src="@item.ImageURL" class="history-card-img" alt="@item.Name" />
+			<div class="history-card-play-overlay">
+				<a href="/Movie/Play?videoUrl=@item.VideoURL&movieName=@item.Name&MovieID=@item.MovieId" onclick="event.stopPropagation();" class="history-card-play-icon" style="text-decoration: none;">
+					<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+				</a>
+			</div>
+			@{
+				var percentage = item.TotalSeconds > 0 ? (item.WatchedSeconds * 100) / item.TotalSeconds : 0;
+				if (percentage > 100) percentage = 100;
+			}
+			<div class="history-card-progress" style="width: @percentage%;"></div>
+		</div>
+		<div class="history-card-content">
+			<h3 class="history-card-title">@item.Name</h3>
+			<div class="history-card-meta">
+				<span style="display:inline-flex;align-items:center;gap:3px;color:var(--accent,#e8b84b);font-weight:600;"><svg width="11" height="11" viewBox="0 0 24 24" fill="#e8b84b" stroke="#e8b84b"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>8.5</span>
+				<span>•</span>
+				@if (item.CategoryName != null)
+				{
+					@foreach (var item2 in item.CategoryName)
+					{
+						<span>@item2</span>
+					}
+				}
+				<span>•</span>
+				<span>@item.CreatedAt.ToString("dd MMM yyyy")</span>
+			</div>
+			<p class="history-card-desc">@item.Description</p>
+		</div>
+		<div class="history-card-actions" onclick="event.stopPropagation(); removeFromHistory('@item.EntityID', this.parentElement);">
+			<button class="remove-btn" title="Geçmişten sil">
+				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+			</button>
+		</div>
+	</div>
+}
+

@@ -1,0 +1,40 @@
+@model IList<MovieApplicationUI.Dto.SubComment.SubCommentListDto>
+
+@if (Model != null && Model.Count > 0)
+{
+    foreach (var item in Model)
+    {
+        TimeSpan fark = DateTime.UtcNow - item.CreatedAt;
+        var url = $"https://ui-avatars.com/api/?name={item.UserName}&background=random";
+
+        <div class="comment-item" style="margin-top: 10px; margin-bottom: 10px; padding-left: 10px; border-left: 2px solid rgba(255,255,255,0.1);">
+            <img src="@url" alt="User" class="comment-avatar" style="width: 30px; height: 30px;" />
+            <div class="comment-content">
+                <div class="comment-header">
+                    <span class="comment-author" style="font-size: 0.9rem;">@item.UserName</span>
+                    <span class="comment-time" style="font-size: 0.75rem;">
+                        @if (fark.TotalDays > 0 && fark.TotalDays < 1 && fark.TotalHours < 1)
+                        {
+                            @($"{(int)fark.TotalMinutes} dakika önce")
+                        }
+                        else if (fark.TotalDays > 0 && fark.TotalDays < 1)
+                        {
+                            @($"{(int)fark.TotalHours} saat önce")
+                        }
+                        else if (fark.TotalDays < 14)
+                        {
+                            @($"{(int)fark.TotalDays} gün önce")
+                        }
+                        else
+                        {
+                            @item.CreatedAt.ToString("dd.MM.yyyy")
+                        }
+                    </span>
+                </div>
+                <p class="comment-text" style="font-size: 0.88rem;">@item.Content</p>
+                <div class="comment-interactions">
+                </div>
+            </div>
+        </div>
+    }
+}

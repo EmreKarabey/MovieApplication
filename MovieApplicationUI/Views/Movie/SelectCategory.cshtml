@@ -1,0 +1,271 @@
+@{
+    ViewData["Title"] = "Kategori Seç";
+}
+
+<style>
+    .category-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+
+    .category-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .category-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: var(--text);
+        margin-bottom: 12px;
+        letter-spacing: -0.5px;
+    }
+
+    .category-title span {
+        color: var(--accent);
+    }
+
+    .form-group {
+        margin-bottom: 32px;
+    }
+
+    .form-control {
+        width: 100%;
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: var(--text);
+        padding: 16px 20px;
+        border-radius: 12px;
+        font-size: 15px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        outline: none;
+    }
+
+    .form-control:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 4px rgba(232, 184, 75, 0.15);
+        background: rgba(0, 0, 0, 0.4);
+    }
+
+    select.form-control {
+        cursor: pointer;
+        appearance: none;
+        -webkit-appearance: none;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e8b84b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 16px center;
+        background-size: 16px;
+    }
+
+    select.form-control option {
+        background: #1a1a26;
+        color: #f0ede8;
+    }
+
+    body.light-mode .form-control {
+        background: rgba(255, 255, 255, 0.6);
+        border-color: rgba(0,0,0,0.1);
+    }
+
+    body.light-mode .form-control:focus {
+        background: #fff;
+    }
+
+    .category-subtitle {
+        color: var(--muted);
+        font-size: 1.1rem;
+    }
+
+    .category-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 16px;
+        margin-bottom: 40px;
+    }
+
+    .category-card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 24px 16px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 2px solid rgba(255, 255, 255, 0.05);
+        border-radius: 16px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        text-align: center;
+        overflow: hidden;
+    }
+
+    .category-card:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.15);
+        transform: translateY(-3px);
+    }
+
+    .category-checkbox {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+        height: 0;
+        width: 0;
+    }
+
+    /* Checked State */
+    .category-checkbox:checked ~ .category-card {
+        background: rgba(232, 184, 75, 0.1);
+        border-color: var(--accent);
+        box-shadow: 0 8px 20px rgba(232, 184, 75, 0.15);
+    }
+
+    .category-icon {
+        width: 40px;
+        height: 40px;
+        margin-bottom: 12px;
+        color: var(--muted);
+        transition: all 0.3s ease;
+    }
+
+    .category-checkbox:checked ~ .category-card .category-icon {
+        color: var(--accent);
+        transform: scale(1.1);
+    }
+
+    .category-name {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text);
+        transition: all 0.3s ease;
+    }
+
+    .category-checkbox:checked ~ .category-card .category-name {
+        color: var(--accent);
+    }
+
+    .check-mark {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        opacity: 0;
+        transform: scale(0.5);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        color: var(--accent);
+    }
+
+    .category-checkbox:checked ~ .category-card .check-mark {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    .btn-publish {
+        width: 100%;
+        padding: 16px;
+        border: none;
+        border-radius: 12px;
+        background: var(--accent);
+        color: #000;
+        font-size: 1.1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .btn-publish:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(232, 184, 75, 0.4);
+        background: #f1c453;
+    }
+
+    body.light-mode .category-card {
+        background: rgba(0, 0, 0, 0.02);
+        border-color: rgba(0, 0, 0, 0.05);
+    }
+
+    body.light-mode .category-card:hover {
+        background: rgba(0, 0, 0, 0.05);
+        border-color: rgba(0, 0, 0, 0.1);
+    }
+
+    body.light-mode .category-checkbox:checked ~ .category-card {
+        background: rgba(232, 184, 75, 0.15);
+        border-color: var(--accent);
+    }
+
+    @@media (max-width: 600px) {
+        .category-container {
+            padding: 24px 14px;
+        }
+
+        .category-header {
+            margin-bottom: 24px;
+        }
+
+        .category-title {
+            font-size: 1.8rem;
+        }
+
+        .category-subtitle {
+            font-size: 0.95rem;
+        }
+
+        .form-control {
+            padding: 12px 14px;
+            font-size: 14px;
+        }
+
+        .category-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .category-card {
+            padding: 16px 10px;
+            border-radius: 12px;
+        }
+
+        .category-icon {
+            width: 32px;
+            height: 32px;
+            margin-bottom: 8px;
+        }
+
+        .category-name {
+            font-size: 0.95rem;
+        }
+
+        .btn-publish {
+            padding: 14px;
+            font-size: 1rem;
+        }
+    }
+</style>
+
+<div class="category-container">
+    <div class="category-header">
+        <h1 class="category-title">Kategori <span>Seçimi</span></h1>
+        <p class="category-subtitle">Filminizin ait olduğu tüm kategorileri seçin.</p>
+    </div>
+
+    <form asp-action="SelectCategory" asp-controller="Movie" method="post">
+
+        <div class="form-group">
+            <select class="form-control" name="CategoryId" required>
+                <option value="" disabled selected>Lütfen bir kategori seçin...</option>
+                @await Component.InvokeAsync("_PublishCategoryMovieComponent")
+            </select>
+        </div>
+
+        <button type="submit" class="btn-publish">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            Filmi Yayınla
+        </button>
+    </form>
+</div>

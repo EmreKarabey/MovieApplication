@@ -1,0 +1,138 @@
+# ============================================================
+#  .NET / ASP.NET Core / Razor
+# ============================================================
+
+## Build outputs
+bin/
+obj/
+out/
+
+## Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Rider / JetBrains
+.idea/
+*.DotSettings.user
+
+## NuGet
+*.nupkg
+*.snupkg
+packages/
+!**/packages/build/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+nuget.config
+
+## Publish output
+**/publish/
+**/PublishProfiles/
+
+## ASP.NET
+wwwroot/lib/
+App_Data/
+
+## EF Core migrations (sadece local snapshot'lar)
+# Migrations klasörünü git'te tutmak istiyorsan bu satırı kaldır
+# **/Migrations/
+
+## Secrets & config overrides
+appsettings.Development.json
+appsettings.Local.json
+secrets.json
+*.pfx
+*.p12
+
+## Firebase Admin SDK
+**/Firebase/firebase-adminsdk.json
+
+## Logs
+logs/
+*.log
+*.log.*
+
+## Test results
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+
+## Crash dumps
+*.dmp
+
+# ============================================================
+#  Flutter / Dart
+# ============================================================
+
+## Flutter build outputs
+**/flutter/build/
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+pubspec.lock           # lock'u tutmak istiyorsan sil bu satırı
+
+## Dart
+.dart_tool/
+doc/api/
+*.js.map
+*.g.dart              # kod üretimi (riverpod vs.) — gerekirse aç
+*.freezed.dart        # freezed üretimi — gerekirse aç
+
+## Android (Flutter)
+**/android/.gradle/
+**/android/local.properties
+**/android/key.properties
+**/android/*.jks
+**/android/app/google-services.json
+
+## iOS (Flutter)
+**/ios/.symlinks/
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/Flutter/Generated.xcconfig
+**/ios/Pods/
+**/ios/GoogleService-Info.plist
+
+## macOS (Flutter)
+**/macos/Flutter/GeneratedPluginRegistrant.swift
+**/macos/Flutter/ephemeral/
+
+## Web (Flutter)
+**/web/flutter_service_worker.js
+**/web/version.json
+
+# ============================================================
+#  Genel
+# ============================================================
+
+## OS
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db
+
+## Environment & secrets
+.env
+.env.*
+!.env.example
+
+## Docker (local override)
+docker-compose.override.yml
+
+## Editors
+*.swp
+*.bak
+*~
+.vscode/settings.json
+.vscode/launch.json
+# Aşağıdakini paylaşmak istersen aç:
+# !.vscode/extensions.json
+
+## Temporary files
+*.tmp
+*.temp

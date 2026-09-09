@@ -1,0 +1,68 @@
+@model MovieApplicationUI.Paginate.PaginateList<MovieApplicationUI.Dto.Comment.CommentListDto>
+@{
+	var currentUser = @ViewBag.VUserName ?? "E";
+	var currentUserAvatarUrl = $"https://ui-avatars.com/api/?name={currentUser}&background=random";
+}
+@foreach (var item in Model.Items)
+{
+	var commentUserAvatarUrl = $"https://ui-avatars.com/api/?name={item.UserName}&background=random";
+	TimeSpan fark = DateTime.UtcNow - item.CreatedAt;
+	<div class="comment-item">
+		<img src="@commentUserAvatarUrl" alt="@item.UserName" class="comment-avatar" />
+		<div class="comment-content">
+			<div class="comment-header">
+				<span class="comment-author">@item.UserName</span>
+				<span class="comment-time">
+					@if (fark.TotalDays > 0 && fark.TotalDays < 1 && fark.TotalHours < 1)
+					{
+						@($"{(int)fark.TotalMinutes} dakika önce")
+					}
+					else if (fark.TotalDays > 0 && fark.TotalDays < 1)
+					{
+						@($"{(int)fark.TotalHours} saat önce")
+					}
+					else if (fark.TotalDays < 14)
+					{
+						@($"{(int)fark.TotalDays} gün önce")
+					}
+					else
+					{
+						@item.CreatedAt.ToString("dd.MM.yyyy")
+					}
+				</span>
+			</div>
+			<p class="comment-text">@item.Content</p>
+			<div class="comment-interactions">
+				<button onclick="toggleReplyBox('@item.EntityID')">Yanıt Ver</button>
+			</div>
+
+			<!-- Reply Box (Gizli) -->
+			<div class="reply-box d-none" id="reply-box-@item.EntityID" style="margin-top: 15px; display: flex; gap: 10px; width: 100%;">
+				<img src="@currentUserAvatarUrl" class="comment-avatar" style="width: 30px; height: 30px;" />
+				<div class="input-wrapper" style="flex:1;">
+					<textarea id="reply-content-@item.EntityID" placeholder="Yanıtınızı yazın..." style="width:100%; border-bottom: 1px solid #6b6878; color: #fff; background: transparent; padding: 5px; resize: none; outline: none;" oninput="autoResize(this)" rows="1"></textarea>
+					<div class="comment-actions" style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
+						<button type="button" class="btn-cancel" onclick="toggleReplyBox('@item.EntityID')">İptal</button>
+						<button type="button" class="btn-submit" onclick="submitReply('@item.EntityID')">Yanıtla</button>
+					</div>
+				</div>
+			</div>
+
+            <!-- SubComments Area -->
+            @if (item.SubCommentsCount > 0)
+            {
+                <div style="margin-top: 18px;">
+                    <button type="button" onclick="loadSubComments('@item.EntityID')" id="btn-load-subcomments-@item.EntityID" style="background: transparent; border: none; color: #45a29e; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; padding: 0; margin-top: 12px; margin-bottom: 8px;">
+                        <i class="bi bi-chevron-down"></i> Yanıtları Gör (@item.SubCommentsCount)
+                    </button>
+                    <div id="subcomments-container-@item.EntityID" style="margin-top: 10px; padding-left: 20px;"></div>
+                </div>
+            }
+            else
+            {
+                <div id="subcomments-container-@item.EntityID" style="margin-top: 18px; padding-left: 20px;"></div>
+            }
+
+		</div>
+	</div>
+}

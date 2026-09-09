@@ -1,0 +1,54 @@
+@model List< GetCatgoryFiltreDto>
+
+
+
+<div class="movie-grid">
+	@if (Model == null || !Model.Any())
+	{
+		<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:60px 20px; color:var(--muted); gap:12px;">
+			<div style="font-size:48px;">🎬</div>
+			<div style="font-size:16px; font-weight:600; color:var(--text);">Bu kategoriye ait favori filmi bulunamadı</div>
+		</div>
+	}
+	else
+	{
+		@foreach (var item in Model)
+		{
+			<div class="movie-card">
+				<div class="card-poster-wrap">
+					<img class="card-poster" src="@item.ImageURL" alt="@item.Name" />
+					<div class="card-rating">★ 8.6</div>
+					<div class="card-overlay">
+						<a href="/Movie/Play?videoUrl=@item.VideoURL&MovieID=@item.EntityID&movieName=@item.Name" class="play-btn">
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+						</a>
+						<div class="overlay-actions">
+							<button class="ov-btn favorite-btn" id="favorite-btn_@item.EntityID" data-movie-id="@item.EntityID" onclick="toggleFavoriteMovie('@item.EntityID')">
+								<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+							</button>
+							<button class="ov-btn save-btn" id="saveBtn_@item.EntityID" data-movie-id="@item.EntityID" onclick="toggleSaveMovie('@item.EntityID')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg></button>
+							<button class="ov-btn info-btn" onclick="openMovieDetails('@item.EntityID')">
+								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+							</button>
+						</div>
+					</div>
+				</div>
+				<div class="card-title">@item.Name</div>
+				<div class="card-info">
+					<span>@item.ReleaseDate</span>
+				</div>
+			</div>
+
+			<script>
+				document.addEventListener('DOMContentLoaded', function() {
+					checkIfSaved('@item.EntityID');
+					checkIfFavorite('@item.EntityID');
+				});
+			</script>
+
+		}
+	}
+
+</div>
+
+

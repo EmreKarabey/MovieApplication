@@ -1,0 +1,39 @@
+﻿using Microsoft.EntityFrameworkCore.Migrations;
+
+#nullable disable
+
+namespace Persistence.Migrations
+{
+    /// <inheritdoc />
+    public partial class UpdateMovieTable : Migration
+    {
+        /// <inheritdoc />
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.RenameColumn(
+                name: "ProducerName",
+                table: "Movies",
+                newName: "ReleaseDate");
+
+            migrationBuilder.AddColumn<int>(
+                name: "ReleaseDate1",
+                table: "Movies",
+                type: "int",
+                nullable: false,
+                defaultValue: 0);
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropColumn(
+                name: "ReleaseDate1",
+                table: "Movies");
+
+            migrationBuilder.RenameColumn(
+                name: "ReleaseDate",
+                table: "Movies",
+                newName: "ProducerName");
+        }
+    }
+}
